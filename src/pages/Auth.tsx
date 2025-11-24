@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,33 +7,55 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { user, signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [signupName, setSignupName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPhone, setSignupPhone] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false);
+    const { error } = await signIn(loginEmail, loginPassword);
+    
+    setIsLoading(false);
+    
+    if (error) {
+      toast.error(error.message || "Login failed");
+    } else {
       toast.success("Login successful!");
       navigate("/dashboard");
-    }, 1000);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate signup
-    setTimeout(() => {
-      setIsLoading(false);
+    const { error } = await signUp(signupEmail, signupPassword, signupName, signupPhone);
+    
+    setIsLoading(false);
+    
+    if (error) {
+      toast.error(error.message || "Signup failed");
+    } else {
       toast.success("Account created successfully!");
       navigate("/dashboard");
-    }, 1000);
+    }
   };
 
   return (
@@ -60,11 +82,13 @@ const Auth = () => {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email or Phone</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
-                    type="text"
-                    placeholder="Enter your email or phone"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -74,6 +98,8 @@ const Auth = () => {
                     id="password"
                     type="password"
                     placeholder="Enter your password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
                     required
                   />
                 </div>
@@ -95,6 +121,8 @@ const Auth = () => {
                     id="name"
                     type="text"
                     placeholder="Enter your full name"
+                    value={signupName}
+                    onChange={(e) => setSignupName(e.target.value)}
                     required
                   />
                 </div>
@@ -104,16 +132,19 @@ const Auth = () => {
                     id="signup-email"
                     type="email"
                     placeholder="Enter your email"
+                    value={signupEmail}
+                    onChange={(e) => setSignupEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone Number (Optional)</Label>
                   <Input
                     id="phone"
                     type="tel"
                     placeholder="Enter your phone number"
-                    required
+                    value={signupPhone}
+                    onChange={(e) => setSignupPhone(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -121,8 +152,11 @@ const Auth = () => {
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="Create a password"
+                    placeholder="Create a password (min 6 characters)"
+                    value={signupPassword}
+                    onChange={(e) => setSignupPassword(e.target.value)}
                     required
+                    minLength={6}
                   />
                 </div>
                 <Button
