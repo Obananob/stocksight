@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardStats {
   todaySales: number;
@@ -23,6 +24,7 @@ interface ActivityItem {
 
 const Dashboard = () => {
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     todaySales: 0,
     stockValue: 0,
@@ -322,20 +324,35 @@ const Dashboard = () => {
               <Button 
                 className="w-full justify-start bg-primary hover:bg-primary-hover" 
                 size="lg"
-                onClick={() => window.location.href = '/inventory'}
+                onClick={() => navigate('/inventory')}
               >
                 <Package className="mr-2 h-5 w-5" />
                 Manage Inventory
               </Button>
-              <Button className="w-full justify-start" variant="outline" size="lg">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline" 
+                size="lg"
+                onClick={() => navigate('/sales')}
+              >
                 <TrendingUp className="mr-2 h-5 w-5" />
                 Record Sale
               </Button>
-              <Button className="w-full justify-start" variant="outline" size="lg">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline" 
+                size="lg"
+                onClick={() => navigate('/reports')}
+              >
                 <Activity className="mr-2 h-5 w-5" />
                 View Reports
               </Button>
-              <Button className="w-full justify-start" variant="outline" size="lg">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline" 
+                size="lg"
+                onClick={() => navigate('/reconciliation')}
+              >
                 <AlertTriangle className="mr-2 h-5 w-5" />
                 Reconciliation
               </Button>
