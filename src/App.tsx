@@ -15,6 +15,7 @@ import Reports from "./pages/Reports";
 import Reconciliation from "./pages/Reconciliation";
 import AuditLog from "./pages/AuditLog";
 import Profile from "./pages/Profile";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -95,6 +96,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <Profile />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/install"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Install />
                   </AppLayout>
                 </ProtectedRoute>
               }

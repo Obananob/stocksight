@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Package, Plus, AlertTriangle, LogOut, Trash2 } from "lucide-react";
+import { Package, Plus, AlertTriangle, LogOut, Trash2, Edit, Search, Filter } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ interface Product {
   unit_price: number;
   current_stock: number;
   low_stock_threshold: number;
+  category: string | null;
 }
 
 const Inventory = () => {
@@ -24,8 +26,12 @@ const Inventory = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [addProductOpen, setAddProductOpen] = useState(false);
-  const [addStockOpen, setAddStockOpen] = useState(false);
+  const [editProductOpen, setEditProductOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   // Add Product Form State
   const [productName, setProductName] = useState("");
@@ -33,6 +39,7 @@ const Inventory = () => {
   const [unitPrice, setUnitPrice] = useState("");
   const [initialStock, setInitialStock] = useState("");
   const [lowStockThreshold, setLowStockThreshold] = useState("10");
+  const [category, setCategory] = useState("");
 
   // Add Stock Form State
   const [stockQuantity, setStockQuantity] = useState("");
@@ -95,6 +102,7 @@ const Inventory = () => {
           unit_price: parseFloat(unitPrice),
           current_stock: parseInt(initialStock),
           low_stock_threshold: parseInt(lowStockThreshold),
+          category: category || null,
           owner_id: user?.id,
         })
         .select()
@@ -186,12 +194,53 @@ const Inventory = () => {
     }
   };
 
+  const handleEditProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedProduct) return;
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({
+          name: productName,
+          cost_price: parseFloat(costPrice),
+          unit_price: parseFloat(unitPrice),
+          low_stock_threshold: parseInt(lowStockThreshold),
+          category: category || null,
+        })
+        .eq('id', selectedProduct.id);
+
+      if (error) throw error;
+
+      toast.success('Product updated successfully!');
+      setEditProductOpen(false);
+      resetProductForm();
+      setSelectedProduct(null);
+      loadProducts();
+    } catch (error: any) {
+      console.error('Error updating product:', error);
+      toast.error(error.message || 'Failed to update product');
+    }
+  };
+
+  const openEditDialog = (product: Product) => {
+    setSelectedProduct(product);
+    setProductName(product.name);
+    setCostPrice(product.cost_price.toString());
+    setUnitPrice(product.unit_price.toString());
+    setLowStockThreshold(product.low_stock_threshold.toString());
+    setCategory(product.category || "");
+    setEditProductOpen(true);
+  };
+
   const resetProductForm = () => {
     setProductName("");
     setCostPrice("");
     setUnitPrice("");
     setInitialStock("");
     setLowStockThreshold("10");
+    setCategory("");
   };
 
   const formatCurrency = (amount: number) => {
@@ -200,6 +249,16 @@ const Inventory = () => {
       currency: 'NGN',
     }).format(amount);
   };
+
+  // Get unique categories for filter
+  const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean))) as string[];
+
+  // Filter products based on search and category
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   if (loading) {
     return (
@@ -295,8 +354,86 @@ const Inventory = () => {
                         />
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category (Optional)</Label>
+                      <Input
+                        id="category"
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        placeholder="e.g., Beverages, Snacks"
+                      />
+                    </div>
                     <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
                       Add Product
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog open={editProductOpen} onOpenChange={setEditProductOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Product</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleEditProduct} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="editProductName">Product Name</Label>
+                      <Input
+                        id="editProductName"
+                        value={productName}
+                        onChange={(e) => setProductName(e.target.value)}
+                        placeholder="e.g., Coca-Cola 50cl"
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="editCostPrice">Cost Price (₦)</Label>
+                        <Input
+                          id="editCostPrice"
+                          type="number"
+                          step="0.01"
+                          value={costPrice}
+                          onChange={(e) => setCostPrice(e.target.value)}
+                          placeholder="0.00"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="editUnitPrice">Selling Price (₦)</Label>
+                        <Input
+                          id="editUnitPrice"
+                          type="number"
+                          step="0.01"
+                          value={unitPrice}
+                          onChange={(e) => setUnitPrice(e.target.value)}
+                          placeholder="0.00"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="editLowStockThreshold">Low Stock Alert</Label>
+                      <Input
+                        id="editLowStockThreshold"
+                        type="number"
+                        value={lowStockThreshold}
+                        onChange={(e) => setLowStockThreshold(e.target.value)}
+                        placeholder="10"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="editCategory">Category (Optional)</Label>
+                      <Input
+                        id="editCategory"
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        placeholder="e.g., Beverages, Snacks"
+                      />
+                    </div>
+                    <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
+                      Update Product
                     </Button>
                   </form>
                 </DialogContent>
@@ -311,6 +448,33 @@ const Inventory = () => {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        {/* Search and Filter */}
+        {products.length > 0 && (
+          <div className="mb-6 flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
         {products.length === 0 ? (
           <Card className="p-12 text-center">
             <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -323,16 +487,39 @@ const Inventory = () => {
               Add Your First Product
             </Button>
           </Card>
+        ) : filteredProducts.length === 0 ? (
+          <Card className="p-12 text-center">
+            <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No products found</h3>
+            <p className="text-muted-foreground">
+              Try adjusting your search or filter criteria
+            </p>
+          </Card>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => {
+            {filteredProducts.map((product) => {
               const isLowStock = product.current_stock <= product.low_stock_threshold;
               
               return (
                 <Card key={product.id} className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-foreground">{product.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg text-foreground">{product.name}</h3>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => openEditDialog(product)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {product.category && (
+                        <span className="text-xs text-muted-foreground bg-accent px-2 py-1 rounded-full mt-1 inline-block">
+                          {product.category}
+                        </span>
+                      )}
                       <div className="flex items-center gap-2 mt-2">
                         <span className={`text-2xl font-bold ${isLowStock ? 'text-warning' : 'text-foreground'}`}>
                           {product.current_stock}
@@ -353,6 +540,12 @@ const Inventory = () => {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Selling Price:</span>
                       <span className="font-medium">{formatCurrency(product.unit_price)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm border-t pt-2">
+                      <span className="text-muted-foreground font-semibold">Profit/Unit:</span>
+                      <span className="font-bold text-primary">
+                        {formatCurrency(product.unit_price - product.cost_price)}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Low Stock Alert:</span>

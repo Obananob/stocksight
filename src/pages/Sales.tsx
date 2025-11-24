@@ -18,6 +18,7 @@ interface Product {
   id: string;
   name: string;
   unit_price: number;
+  cost_price: number;
   current_stock: number;
 }
 
@@ -34,7 +35,7 @@ const Sales = () => {
   const fetchProducts = async () => {
     const { data, error } = await supabase
       .from("products")
-      .select("id, name, unit_price, current_stock")
+      .select("id, name, unit_price, cost_price, current_stock")
       .gt("current_stock", 0)
       .order("name");
 
@@ -157,14 +158,20 @@ const Sales = () => {
           </div>
 
           {selectedProductData && (
-            <div className="p-4 rounded-lg bg-accent">
+            <div className="p-4 rounded-lg bg-accent space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Unit Price</span>
                 <span className="text-2xl font-bold text-foreground">
                   {formatCurrency(selectedProductData.unit_price)}
                 </span>
               </div>
-              <div className="flex justify-between items-center mt-2">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Profit per Unit</span>
+                <span className="font-semibold text-primary">
+                  {formatCurrency(selectedProductData.unit_price - selectedProductData.cost_price)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t">
                 <span className="text-muted-foreground">Available Stock</span>
                 <span className="font-semibold">{selectedProductData.current_stock} units</span>
               </div>
@@ -185,11 +192,17 @@ const Sales = () => {
           </div>
 
           {selectedProductData && quantity && parseInt(quantity) > 0 && (
-            <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary">
+            <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-lg font-semibold">Total Amount</span>
                 <span className="text-3xl font-bold text-primary">
                   {formatCurrency(selectedProductData.unit_price * parseInt(quantity))}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm pt-2 border-t border-primary/20">
+                <span className="text-foreground">Total Profit</span>
+                <span className="font-bold text-foreground">
+                  {formatCurrency((selectedProductData.unit_price - selectedProductData.cost_price) * parseInt(quantity))}
                 </span>
               </div>
             </div>

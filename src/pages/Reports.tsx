@@ -20,6 +20,7 @@ import {
 interface SalesData {
   date: string;
   total: number;
+  profit: number;
   count: number;
 }
 
@@ -27,6 +28,7 @@ interface TopProduct {
   name: string;
   total_sales: number;
   quantity_sold: number;
+  profit: number;
 }
 
 const Reports = () => {
@@ -35,6 +37,7 @@ const Reports = () => {
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalSales, setTotalSales] = useState(0);
+  const [totalProfit, setTotalProfit] = useState(0);
 
   useEffect(() => {
     fetchReports();
@@ -46,22 +49,24 @@ const Reports = () => {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - daysBack);
 
-      // Fetch sales data
+      // Fetch sales data with product info for profit calculation
       const { data: sales, error: salesError } = await supabase
         .from("sales")
-        .select("created_at, total_price, quantity")
+        .select("created_at, total_price, quantity, unit_price, product_id, products(cost_price)")
         .gte("created_at", startDate.toISOString())
         .order("created_at", { ascending: true });
 
       if (salesError) throw salesError;
 
       // Group sales by period
-      const grouped = sales?.reduce((acc: any, sale) => {
+      const grouped = sales?.reduce((acc: any, sale: any) => {
         const date = new Date(sale.created_at).toLocaleDateString();
+        const profit = (sale.unit_price - (sale.products?.cost_price || 0)) * sale.quantity;
         if (!acc[date]) {
-          acc[date] = { date, total: 0, count: 0 };
+          acc[date] = { date, total: 0, profit: 0, count: 0 };
         }
         acc[date].total += sale.total_price;
+        acc[date].profit += profit;
         acc[date].count += sale.quantity;
         return acc;
       }, {});
@@ -71,24 +76,32 @@ const Reports = () => {
       // Calculate totals
       const revenue = sales?.reduce((sum, sale) => sum + sale.total_price, 0) || 0;
       const count = sales?.reduce((sum, sale) => sum + sale.quantity, 0) || 0;
+      const profit = sales?.reduce((sum, sale: any) => {
+        const saleProfit = (sale.unit_price - (sale.products?.cost_price || 0)) * sale.quantity;
+        return sum + saleProfit;
+      }, 0) || 0;
+      
       setTotalRevenue(revenue);
       setTotalSales(count);
+      setTotalProfit(profit);
 
       // Fetch top products
       const { data: topProds, error: topError } = await supabase
         .from("sales")
-        .select("product_id, total_price, quantity, products(name)")
+        .select("product_id, total_price, quantity, unit_price, products(name, cost_price)")
         .gte("created_at", startDate.toISOString());
 
       if (topError) throw topError;
 
       const productSales = topProds?.reduce((acc: any, sale: any) => {
         const name = sale.products?.name || "Unknown";
+        const profit = (sale.unit_price - (sale.products?.cost_price || 0)) * sale.quantity;
         if (!acc[name]) {
-          acc[name] = { name, total_sales: 0, quantity_sold: 0 };
+          acc[name] = { name, total_sales: 0, quantity_sold: 0, profit: 0 };
         }
         acc[name].total_sales += sale.total_price;
         acc[name].quantity_sold += sale.quantity;
+        acc[name].profit += profit;
         return acc;
       }, {});
 
@@ -130,7 +143,7 @@ const Reports = () => {
         </TabsList>
 
         <TabsContent value={period} className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <Card className="p-6">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-lg bg-primary/10">
@@ -168,10 +181,24 @@ const Reports = () => {
                 </div>
               </div>
             </Card>
+
+            <Card className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Profit</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {formatCurrency(totalProfit)}
+                  </p>
+                </div>
+              </div>
+            </Card>
           </div>
 
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Sales Trend</h3>
+            <h3 className="text-lg font-semibold mb-4">Sales & Profit Trend</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={salesData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -180,6 +207,7 @@ const Reports = () => {
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
                 <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" name="Revenue (₦)" />
+                <Line type="monotone" dataKey="profit" stroke="#F39C12" name="Profit (₦)" />
               </LineChart>
             </ResponsiveContainer>
           </Card>
@@ -194,6 +222,7 @@ const Reports = () => {
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
                 <Bar dataKey="total_sales" fill="hsl(var(--primary))" name="Revenue (₦)" />
+                <Bar dataKey="profit" fill="#F39C12" name="Profit (₦)" />
               </BarChart>
             </ResponsiveContainer>
           </Card>
