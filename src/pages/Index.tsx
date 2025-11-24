@@ -47,21 +47,13 @@ const Index = () => {
               Simple, powerful, and works offline.
             </p>
 
-            <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="flex justify-center">
               <Button
                 size="lg"
-                className="bg-primary hover:bg-primary-hover text-lg"
+                className="bg-primary hover:bg-primary-hover text-lg px-12"
                 onClick={() => navigate("/auth")}
               >
-                Get Started Free
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-lg"
-                onClick={() => navigate("/dashboard")}
-              >
-                View Demo
+                Get Started
               </Button>
             </div>
           </div>
