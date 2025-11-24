@@ -103,6 +103,13 @@ const Reports = () => {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+    }).format(amount);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -131,7 +138,7 @@ const Reports = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold">${totalRevenue.toFixed(2)}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
                 </div>
               </div>
             </Card>
@@ -156,7 +163,7 @@ const Reports = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Avg Sale Value</p>
                   <p className="text-2xl font-bold">
-                    ${totalSales > 0 ? (totalRevenue / totalSales).toFixed(2) : "0.00"}
+                    {totalSales > 0 ? formatCurrency(totalRevenue / totalSales) : formatCurrency(0)}
                   </p>
                 </div>
               </div>
@@ -170,9 +177,9 @@ const Reports = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
-                <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" name="Revenue ($)" />
+                <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" name="Revenue (₦)" />
               </LineChart>
             </ResponsiveContainer>
           </Card>
@@ -184,9 +191,9 @@ const Reports = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
-                <Bar dataKey="total_sales" fill="hsl(var(--primary))" name="Revenue ($)" />
+                <Bar dataKey="total_sales" fill="hsl(var(--primary))" name="Revenue (₦)" />
               </BarChart>
             </ResponsiveContainer>
           </Card>

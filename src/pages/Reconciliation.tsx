@@ -105,6 +105,13 @@ const Reconciliation = () => {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+    }).format(amount);
+  };
+
   const discrepancy = cashReceived
     ? parseFloat(expectedCash) - parseFloat(cashReceived)
     : 0;
@@ -139,14 +146,14 @@ const Reconciliation = () => {
               <DollarSign className="h-5 w-5 text-primary" />
               <span className="font-semibold">Expected Cash</span>
             </div>
-            <p className="text-3xl font-bold text-foreground">${expectedCash}</p>
+            <p className="text-3xl font-bold text-foreground">{formatCurrency(parseFloat(expectedCash))}</p>
             <p className="text-sm text-muted-foreground mt-1">
               Based on sales for {selectedDate}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cashReceived">Cash Received</Label>
+            <Label htmlFor="cashReceived">Cash Received (₦)</Label>
             <Input
               id="cashReceived"
               type="number"
@@ -176,7 +183,7 @@ const Reconciliation = () => {
                 </span>
               </div>
               <p className="text-2xl font-bold mt-2">
-                ${Math.abs(discrepancy).toFixed(2)} {discrepancy > 0 ? "Short" : discrepancy < 0 ? "Over" : ""}
+                {formatCurrency(Math.abs(discrepancy))} {discrepancy > 0 ? "Short" : discrepancy < 0 ? "Over" : ""}
               </p>
             </div>
           )}
@@ -217,8 +224,7 @@ const Reconciliation = () => {
                     <div>
                       <p className="font-semibold">{new Date(record.date).toLocaleDateString()}</p>
                       <p className="text-sm text-muted-foreground">
-                        Expected: ${record.expected_cash.toFixed(2)} | Received: $
-                        {record.cash_received.toFixed(2)}
+                        Expected: {formatCurrency(record.expected_cash)} | Received: {formatCurrency(record.cash_received)}
                       </p>
                       {record.notes && (
                         <p className="text-sm text-muted-foreground mt-1">{record.notes}</p>
@@ -236,7 +242,7 @@ const Reconciliation = () => {
                       </span>
                       {Math.abs(diff) > 0.01 && (
                         <p className="text-sm font-semibold mt-1">
-                          ${Math.abs(diff).toFixed(2)} {diff > 0 ? "Short" : "Over"}
+                          {formatCurrency(Math.abs(diff))} {diff > 0 ? "Short" : "Over"}
                         </p>
                       )}
                     </div>

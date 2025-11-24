@@ -101,7 +101,7 @@ const Sales = () => {
         new_stock: newStock,
       });
 
-      toast.success("Sale recorded successfully!");
+      toast.success(`Sale recorded! Total: ${formatCurrency(totalPrice)}`);
       setSelectedProduct("");
       setQuantity("1");
       fetchProducts();
@@ -110,6 +110,13 @@ const Sales = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+    }).format(amount);
   };
 
   const selectedProductData = products.find((p) => p.id === selectedProduct);
@@ -154,7 +161,7 @@ const Sales = () => {
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Unit Price</span>
                 <span className="text-2xl font-bold text-foreground">
-                  ${selectedProductData.unit_price.toFixed(2)}
+                  {formatCurrency(selectedProductData.unit_price)}
                 </span>
               </div>
               <div className="flex justify-between items-center mt-2">
@@ -182,7 +189,7 @@ const Sales = () => {
               <div className="flex justify-between items-center">
                 <span className="text-lg font-semibold">Total Amount</span>
                 <span className="text-3xl font-bold text-primary">
-                  ${(selectedProductData.unit_price * parseInt(quantity)).toFixed(2)}
+                  {formatCurrency(selectedProductData.unit_price * parseInt(quantity))}
                 </span>
               </div>
             </div>

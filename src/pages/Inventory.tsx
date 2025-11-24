@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Package, Plus, AlertTriangle, LogOut } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Package, Plus, AlertTriangle, LogOut, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -155,13 +156,33 @@ const Inventory = () => {
       if (logError) throw logError;
 
       toast.success('Stock added successfully!');
-      setAddStockOpen(false);
       setStockQuantity("");
       setSelectedProduct(null);
       loadProducts();
+      
+      // Close the dialog
+      const closeButton = document.querySelector('[data-state="open"] button[type="button"]') as HTMLButtonElement;
+      closeButton?.click();
     } catch (error: any) {
       console.error('Error adding stock:', error);
       toast.error(error.message || 'Failed to add stock');
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      toast.success(`${productName} deleted successfully!`);
+      loadProducts();
+    } catch (error: any) {
+      console.error('Error deleting product:', error);
+      toast.error(error.message || 'Failed to delete product');
     }
   };
 
@@ -347,45 +368,72 @@ const Inventory = () => {
                     </div>
                   )}
                   
-                  <Dialog open={addStockOpen && selectedProduct?.id === product.id} onOpenChange={(open) => {
-                    setAddStockOpen(open);
-                    if (!open) setSelectedProduct(null);
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button
-                        className="w-full bg-primary hover:bg-primary-hover"
-                        onClick={() => setSelectedProduct(product)}
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Stock
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add Stock - {product.name}</DialogTitle>
-                      </DialogHeader>
-                      <form onSubmit={handleAddStock} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="stockQuantity">Quantity to Add</Label>
-                          <Input
-                            id="stockQuantity"
-                            type="number"
-                            value={stockQuantity}
-                            onChange={(e) => setStockQuantity(e.target.value)}
-                            placeholder="Enter quantity"
-                            min="1"
-                            required
-                          />
-                          <p className="text-sm text-muted-foreground">
-                            Current stock: {product.current_stock} units
-                          </p>
-                        </div>
-                        <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
+                  <div className="flex gap-2">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          className="flex-1 bg-primary hover:bg-primary-hover"
+                          onClick={() => {
+                            setSelectedProduct(product);
+                            setStockQuantity("");
+                          }}
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
                           Add Stock
                         </Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add Stock - {product.name}</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleAddStock} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="stockQuantity">Quantity to Add</Label>
+                            <Input
+                              id="stockQuantity"
+                              type="number"
+                              value={stockQuantity}
+                              onChange={(e) => setStockQuantity(e.target.value)}
+                              placeholder="Enter quantity"
+                              min="1"
+                              required
+                            />
+                            <p className="text-sm text-muted-foreground">
+                              Current stock: {product.current_stock} units
+                            </p>
+                          </div>
+                          <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
+                            Add Stock
+                          </Button>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="icon" className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Product?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{product.name}"? This action cannot be undone and will remove all associated inventory logs.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteProduct(product.id, product.name)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </Card>
               );
             })}

@@ -80,17 +80,26 @@ const Dashboard = () => {
           action_type,
           change_quantity,
           created_at,
-          products:product_id(name),
-          profiles:user_id(name)
+          user_id,
+          products:product_id(name)
         `)
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (logsError) throw logsError;
 
+      // Fetch user profiles separately for the activity logs
+      const userIds = [...new Set(logsData?.map(log => log.user_id).filter(Boolean))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', userIds);
+
+      const profilesMap = new Map(profilesData?.map(p => [p.id, p.name]) || []);
+
       const activity = logsData?.map(log => {
         const productName = (log.products as any)?.name || 'Unknown Product';
-        const userName = (log.profiles as any)?.name || 'System';
+        const userName = profilesMap.get(log.user_id) || 'System';
         const timeAgo = getTimeAgo(new Date(log.created_at));
         
         return {
