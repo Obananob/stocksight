@@ -14,6 +14,7 @@ import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
 import Reconciliation from "./pages/Reconciliation";
 import AuditLog from "./pages/AuditLog";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <AuditLog />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Profile />
                   </AppLayout>
                 </ProtectedRoute>
               }

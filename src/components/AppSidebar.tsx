@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingCart, FileText, ClipboardList, Shield, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, FileText, ClipboardList, Shield, LogOut, User } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,11 +23,13 @@ const ownerItems = [
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Reconciliation", url: "/reconciliation", icon: ClipboardList },
   { title: "Audit Log", url: "/audit", icon: Shield },
+  { title: "Profile", url: "/profile", icon: User },
 ];
 
 const salesRepItems = [
   { title: "Record Sale", url: "/sales", icon: ShoppingCart },
   { title: "Inventory", url: "/inventory", icon: Package },
+  { title: "Profile", url: "/profile", icon: User },
 ];
 
 export function AppSidebar() {
