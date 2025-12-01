@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { useSettings } from "@/contexts/SettingsContext";
 import { toast } from "sonner";
 import { ClipboardList, DollarSign, AlertCircle, CheckCircle } from "lucide-react";
 
@@ -18,6 +19,7 @@ interface ReconciliationRecord {
 }
 
 const Reconciliation = () => {
+  const { formatCurrency, getCurrencyInfo } = useSettings();
   const [records, setRecords] = useState<ReconciliationRecord[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [expectedCash, setExpectedCash] = useState("0");
@@ -105,13 +107,7 @@ const Reconciliation = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-    }).format(amount);
-  };
-
+  const currencySymbol = getCurrencyInfo().symbol;
   const discrepancy = cashReceived
     ? parseFloat(expectedCash) - parseFloat(cashReceived)
     : 0;
@@ -153,7 +149,7 @@ const Reconciliation = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cashReceived">Cash Received (₦)</Label>
+            <Label htmlFor="cashReceived">Cash Received ({currencySymbol})</Label>
             <Input
               id="cashReceived"
               type="number"

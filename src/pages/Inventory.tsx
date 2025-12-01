@@ -9,6 +9,7 @@ import { Package, Plus, AlertTriangle, LogOut, Trash2, Edit, Search, Filter } fr
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSettings } from "@/contexts/SettingsContext";
 import { toast } from "sonner";
 
 interface Product {
@@ -23,6 +24,7 @@ interface Product {
 
 const Inventory = () => {
   const { signOut, user } = useAuth();
+  const { formatCurrency, getCurrencyInfo } = useSettings();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [addProductOpen, setAddProductOpen] = useState(false);
@@ -243,12 +245,7 @@ const Inventory = () => {
     setCategory("");
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-    }).format(amount);
-  };
+  const currencySymbol = getCurrencyInfo().symbol;
 
   // Get unique categories for filter
   const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean))) as string[];
@@ -306,7 +303,7 @@ const Inventory = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="costPrice">Cost Price (₦)</Label>
+                        <Label htmlFor="costPrice">Cost Price ({currencySymbol})</Label>
                         <Input
                           id="costPrice"
                           type="number"
@@ -318,7 +315,7 @@ const Inventory = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="unitPrice">Selling Price (₦)</Label>
+                        <Label htmlFor="unitPrice">Selling Price ({currencySymbol})</Label>
                         <Input
                           id="unitPrice"
                           type="number"
@@ -388,7 +385,7 @@ const Inventory = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="editCostPrice">Cost Price (₦)</Label>
+                        <Label htmlFor="editCostPrice">Cost Price ({currencySymbol})</Label>
                         <Input
                           id="editCostPrice"
                           type="number"
@@ -400,7 +397,7 @@ const Inventory = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="editUnitPrice">Selling Price (₦)</Label>
+                        <Label htmlFor="editUnitPrice">Selling Price ({currencySymbol})</Label>
                         <Input
                           id="editUnitPrice"
                           type="number"

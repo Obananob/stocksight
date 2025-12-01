@@ -3,13 +3,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, Phone, Lock, Eye, EyeOff } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { User, Mail, Phone, Lock, Eye, EyeOff, Globe, DollarSign } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSettings, currencies, languages, Currency, Language } from "@/contexts/SettingsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Profile = () => {
   const { user, updatePassword } = useAuth();
+  const { currency, setCurrency, language, setLanguage, t } = useSettings();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -108,7 +111,7 @@ const Profile = () => {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading profile...</p>
+          <p className="text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -118,19 +121,69 @@ const Profile = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card px-4 py-4 sm:px-6">
         <div className="mx-auto max-w-4xl">
-          <h1 className="text-2xl font-bold text-foreground">Profile Settings</h1>
-          <p className="text-sm text-muted-foreground">Manage your account information</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("profile.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("profile.subtitle")}</p>
         </div>
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
         <div className="space-y-6">
+          {/* Preferences */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4 text-foreground">{t("profile.preferences")}</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="currency" className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  {t("profile.currency")}
+                </Label>
+                <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
+                  <SelectTrigger id="currency">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencies.map((curr) => (
+                      <SelectItem key={curr.code} value={curr.code}>
+                        <span className="flex items-center gap-2">
+                          <span className="font-medium">{curr.symbol}</span>
+                          <span>{curr.name}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="language" className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  {t("profile.language")}
+                </Label>
+                <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
+                  <SelectTrigger id="language">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {languages.map((lang) => (
+                      <SelectItem key={lang.code} value={lang.code}>
+                        <span className="flex items-center gap-2">
+                          <span>{lang.name}</span>
+                          <span className="text-muted-foreground">({lang.nativeName})</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
+
           {/* Profile Information */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4 text-foreground">Personal Information</h2>
+            <h2 className="text-xl font-semibold mb-4 text-foreground">{t("profile.personal")}</h2>
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">{t("profile.name")}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -146,7 +199,7 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("profile.email")}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -162,7 +215,7 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">{t("profile.phone")}</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -181,17 +234,17 @@ const Profile = () => {
                 className="w-full bg-primary hover:bg-primary-hover"
                 disabled={saving}
               >
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? t("common.saving") : t("common.save")}
               </Button>
             </form>
           </Card>
 
           {/* Change Password */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4 text-foreground">Change Password</h2>
+            <h2 className="text-xl font-semibold mb-4 text-foreground">{t("profile.password")}</h2>
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
+                <Label htmlFor="new-password">{t("profile.newPassword")}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -215,7 +268,7 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <Label htmlFor="confirm-password">{t("profile.confirmPassword")}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -243,7 +296,7 @@ const Profile = () => {
                 className="w-full bg-primary hover:bg-primary-hover"
                 disabled={saving}
               >
-                {saving ? "Updating..." : "Update Password"}
+                {saving ? t("common.saving") : t("profile.updatePassword")}
               </Button>
             </form>
           </Card>
