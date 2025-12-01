@@ -4,6 +4,7 @@ import { Package, TrendingUp, AlertTriangle, Activity, LogOut } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSettings } from "@/contexts/SettingsContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -24,6 +25,7 @@ interface ActivityItem {
 
 const Dashboard = () => {
   const { signOut, user } = useAuth();
+  const { formatCurrency, t } = useSettings();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     todaySales: 0,
@@ -189,13 +191,6 @@ const Dashboard = () => {
     if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
     const days = Math.floor(hours / 24);
     return `${days} ${days === 1 ? 'day' : 'days'} ago`;
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-    }).format(amount);
   };
 
   const statsConfig = [

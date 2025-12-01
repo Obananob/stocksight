@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useSettings } from "@/contexts/SettingsContext";
 import { toast } from "sonner";
 import { ShoppingCart, Package } from "lucide-react";
 
@@ -23,6 +24,7 @@ interface Product {
 }
 
 const Sales = () => {
+  const { formatCurrency, t } = useSettings();
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("1");
@@ -111,13 +113,6 @@ const Sales = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-    }).format(amount);
   };
 
   const selectedProductData = products.find((p) => p.id === selectedProduct);

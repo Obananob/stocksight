@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { useSettings } from "@/contexts/SettingsContext";
 import { toast } from "sonner";
 import { FileText, TrendingUp, DollarSign, Package } from "lucide-react";
 import {
@@ -32,6 +33,7 @@ interface TopProduct {
 }
 
 const Reports = () => {
+  const { formatCurrency, getCurrencyInfo } = useSettings();
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
   const [salesData, setSalesData] = useState<SalesData[]>([]);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
@@ -116,12 +118,7 @@ const Reports = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-    }).format(amount);
-  };
+  const currencySymbol = getCurrencyInfo().symbol;
 
   return (
     <div className="space-y-6">
@@ -206,8 +203,8 @@ const Reports = () => {
                 <YAxis />
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
-                <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" name="Revenue (₦)" />
-                <Line type="monotone" dataKey="profit" stroke="#F39C12" name="Profit (₦)" />
+                <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" name={`Revenue (${currencySymbol})`} />
+                <Line type="monotone" dataKey="profit" stroke="#F39C12" name={`Profit (${currencySymbol})`} />
               </LineChart>
             </ResponsiveContainer>
           </Card>
@@ -221,8 +218,8 @@ const Reports = () => {
                 <YAxis />
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
-                <Bar dataKey="total_sales" fill="hsl(var(--primary))" name="Revenue (₦)" />
-                <Bar dataKey="profit" fill="#F39C12" name="Profit (₦)" />
+                <Bar dataKey="total_sales" fill="hsl(var(--primary))" name={`Revenue (${currencySymbol})`} />
+                <Bar dataKey="profit" fill="#F39C12" name={`Profit (${currencySymbol})`} />
               </BarChart>
             </ResponsiveContainer>
           </Card>
