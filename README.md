@@ -1,8 +1,8 @@
-# StockSight - Real-Time Inventory & Sales Tracking
+# ShopCount - Real-Time Inventory & Sales Tracking
 
-StockSight is a modern, mobile-first inventory and sales tracking system designed for small shop owners. It enables real-time tracking of sales and inventory, low stock alerts, and provides a simplified interface for field staff.
+ShopCount is a modern, mobile-first inventory and sales tracking system designed for small shop owners. It enables real-time tracking of sales and inventory, low stock alerts, and provides a simplified interface for field staff.
 
-![StockSight](https://img.shields.io/badge/StockSight-Inventory%20Management-2ECC71?style=for-the-badge)
+![ShopCount](https://img.shields.io/badge/ShopCount-Inventory%20Management-2ECC71?style=for-the-badge)
 
 ## Features
 
@@ -38,7 +38,7 @@ StockSight is a modern, mobile-first inventory and sales tracking system designe
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/stocksight.git
+   git clone https://github.com/Obananob/stocksight.git
    cd stocksight
    ```
 
@@ -84,7 +84,7 @@ If you're setting up your own Supabase project:
 ## Project Structure
 
 ```
-stocksight/
+shopcount/
 ├── public/              # Static assets
 ├── src/
 │   ├── components/      # Reusable UI components
@@ -113,8 +113,6 @@ stocksight/
 3. Add environment variables in project settings
 4. Deploy!
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/stocksight)
-
 ### Netlify
 
 1. Push your code to GitHub
@@ -125,11 +123,9 @@ stocksight/
 4. Add environment variables
 5. Deploy!
 
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/your-username/stocksight)
-
 ### Other Platforms
 
-StockSight can be deployed to any platform that supports static site hosting:
+ShopCount can be deployed to any platform that supports static site hosting:
 
 - **Cloudflare Pages**
 - **GitHub Pages**
@@ -180,4 +176,4 @@ For support, please open an issue on GitHub or contact the maintainers.
 
 ---
 
-Built with ❤️ using [Lovable](https://lovable.dev)
+Built with ❤️ for small shop owners

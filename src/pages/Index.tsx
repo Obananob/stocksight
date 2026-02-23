@@ -1,30 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Package, TrendingUp, Shield, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { t } = useSettings();
 
   const features = [
     {
       icon: TrendingUp,
-      title: "Real-time Sales Tracking",
-      description: "Monitor your sales as they happen with live updates and instant notifications",
+      title: t("index.feature1Title"),
+      description: t("index.feature1Desc"),
     },
     {
       icon: Package,
-      title: "Smart Inventory Management",
-      description: "Keep track of stock levels with automatic low-stock alerts",
+      title: t("index.feature2Title"),
+      description: t("index.feature2Desc"),
     },
     {
       icon: Shield,
-      title: "Secure & Reliable",
-      description: "Your data is protected with enterprise-grade security and daily backups",
+      title: t("index.feature3Title"),
+      description: t("index.feature3Desc"),
     },
     {
       icon: Zap,
-      title: "Works Offline",
-      description: "Record sales even without internet. Syncs automatically when back online",
+      title: t("index.feature4Title"),
+      description: t("index.feature4Desc"),
     },
   ];
 
@@ -40,11 +42,10 @@ const Index = () => {
             </div>
 
             <h1 className="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
-              Welcome to <span className="text-primary">StockSight</span>
+              {t("index.welcome")} <span className="text-primary">ShopCount</span>
             </h1>
             <p className="mb-8 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-              The complete inventory and sales tracking solution designed specifically for small shop owners.
-              Simple, powerful, and works offline.
+              {t("index.subtitle")}
             </p>
 
             <div className="flex justify-center">
@@ -53,7 +54,7 @@ const Index = () => {
                 className="bg-primary hover:bg-primary-hover text-lg px-12"
                 onClick={() => navigate("/auth")}
               >
-                Get Started
+                {t("index.getStarted")}
               </Button>
             </div>
           </div>
@@ -65,10 +66,10 @@ const Index = () => {
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold text-foreground">
-              Everything you need to manage your shop
+              {t("index.featuresTitle")}
             </h2>
             <p className="text-lg text-muted-foreground">
-              Built for simplicity, designed for growth
+              {t("index.featuresSubtitle")}
             </p>
           </div>
 
@@ -93,17 +94,17 @@ const Index = () => {
       <section className="border-t bg-accent px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="mb-4 text-3xl font-bold text-foreground">
-            Ready to transform your business?
+            {t("index.ctaTitle")}
           </h2>
           <p className="mb-8 text-lg text-muted-foreground">
-            Join hundreds of shop owners who trust StockSight to manage their inventory and sales
+            {t("index.ctaSubtitle")}
           </p>
           <Button
             size="lg"
             className="bg-primary hover:bg-primary-hover text-lg"
             onClick={() => navigate("/auth")}
           >
-            Start Your Free Trial
+            {t("index.startTrial")}
           </Button>
         </div>
       </section>

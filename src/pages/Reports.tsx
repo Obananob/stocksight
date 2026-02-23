@@ -33,7 +33,7 @@ interface TopProduct {
 }
 
 const Reports = () => {
-  const { formatCurrency, getCurrencyInfo } = useSettings();
+  const { formatCurrency, getCurrencyInfo, t } = useSettings();
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
   const [salesData, setSalesData] = useState<SalesData[]>([]);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
@@ -82,7 +82,7 @@ const Reports = () => {
         const saleProfit = (sale.unit_price - (sale.products?.cost_price || 0)) * sale.quantity;
         return sum + saleProfit;
       }, 0) || 0;
-      
+
       setTotalRevenue(revenue);
       setTotalSales(count);
       setTotalProfit(profit);
@@ -113,7 +113,7 @@ const Reports = () => {
 
       setTopProducts(sorted as TopProduct[]);
     } catch (error: any) {
-      toast.error("Failed to load reports");
+      toast.error(t("reports.failed"));
       console.error(error);
     }
   };
@@ -127,16 +127,16 @@ const Reports = () => {
           <FileText className="h-8 w-8 text-primary" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Reports & Analytics</h1>
-          <p className="text-muted-foreground">Track your sales performance</p>
+          <h1 className="text-3xl font-bold text-foreground">{t("reports.title")}</h1>
+          <p className="text-muted-foreground">{t("reports.subtitle")}</p>
         </div>
       </div>
 
       <Tabs value={period} onValueChange={(v) => setPeriod(v as any)}>
         <TabsList>
-          <TabsTrigger value="daily">Last 7 Days</TabsTrigger>
-          <TabsTrigger value="weekly">Last 30 Days</TabsTrigger>
-          <TabsTrigger value="monthly">Last 90 Days</TabsTrigger>
+          <TabsTrigger value="daily">{t("reports.daily")}</TabsTrigger>
+          <TabsTrigger value="weekly">{t("reports.weekly")}</TabsTrigger>
+          <TabsTrigger value="monthly">{t("reports.monthly")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value={period} className="space-y-6">
@@ -147,7 +147,7 @@ const Reports = () => {
                   <DollarSign className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
+                  <p className="text-sm text-muted-foreground">{t("reports.revenue")}</p>
                   <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
                 </div>
               </div>
@@ -159,7 +159,7 @@ const Reports = () => {
                   <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Sales</p>
+                  <p className="text-sm text-muted-foreground">{t("dashboard.todaySales")}</p>
                   <p className="text-2xl font-bold">{totalSales}</p>
                 </div>
               </div>
@@ -171,7 +171,7 @@ const Reports = () => {
                   <Package className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Avg Sale Value</p>
+                  <p className="text-sm text-muted-foreground">{t("reports.avgSaleValue")}</p>
                   <p className="text-2xl font-bold">
                     {totalSales > 0 ? formatCurrency(totalRevenue / totalSales) : formatCurrency(0)}
                   </p>
@@ -185,7 +185,7 @@ const Reports = () => {
                   <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Profit</p>
+                  <p className="text-sm text-muted-foreground">{t("reports.profit")}</p>
                   <p className="text-2xl font-bold text-primary">
                     {formatCurrency(totalProfit)}
                   </p>
@@ -195,7 +195,7 @@ const Reports = () => {
           </div>
 
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Sales & Profit Trend</h3>
+            <h3 className="text-lg font-semibold mb-4">{t("reports.salesTrend")}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={salesData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -203,14 +203,14 @@ const Reports = () => {
                 <YAxis />
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
-                <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" name={`Revenue (${currencySymbol})`} />
-                <Line type="monotone" dataKey="profit" stroke="#F39C12" name={`Profit (${currencySymbol})`} />
+                <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" name={`${t("reports.revenue")} (${currencySymbol})`} />
+                <Line type="monotone" dataKey="profit" stroke="#F39C12" name={`${t("reports.profit")} (${currencySymbol})`} />
               </LineChart>
             </ResponsiveContainer>
           </Card>
 
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Top Selling Products</h3>
+            <h3 className="text-lg font-semibold mb-4">{t("reports.topProducts")}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={topProducts}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -218,8 +218,8 @@ const Reports = () => {
                 <YAxis />
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
-                <Bar dataKey="total_sales" fill="hsl(var(--primary))" name={`Revenue (${currencySymbol})`} />
-                <Bar dataKey="profit" fill="#F39C12" name={`Profit (${currencySymbol})`} />
+                <Bar dataKey="total_sales" fill="hsl(var(--primary))" name={`${t("reports.revenue")} (${currencySymbol})`} />
+                <Bar dataKey="profit" fill="#F39C12" name={`${t("reports.profit")} (${currencySymbol})`} />
               </BarChart>
             </ResponsiveContainer>
           </Card>

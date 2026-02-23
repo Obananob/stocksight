@@ -17,7 +17,7 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -48,7 +48,7 @@ const Profile = () => {
       setLoading(false);
     } catch (error: any) {
       console.error('Error loading profile:', error);
-      toast.error('Failed to load profile');
+      toast.error(t("profile.loadFailed"));
       setLoading(false);
     }
   };
@@ -69,10 +69,10 @@ const Profile = () => {
 
       if (error) throw error;
 
-      toast.success('Profile updated successfully!');
+      toast.success(t("profile.updated"));
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      toast.error(t("profile.loadFailed"));
     } finally {
       setSaving(false);
     }
@@ -82,12 +82,12 @@ const Profile = () => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords don't match");
+      toast.error(t("profile.passwordsNoMatch"));
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error(t("profile.passwordTooShort"));
       return;
     }
 
@@ -98,9 +98,9 @@ const Profile = () => {
     setSaving(false);
 
     if (error) {
-      toast.error(error.message || "Failed to update password");
+      toast.error(error.message || t("profile.passwordUpdateFailed"));
     } else {
-      toast.success("Password updated successfully!");
+      toast.success(t("profile.passwordUpdated"));
       setNewPassword("");
       setConfirmPassword("");
     }
@@ -139,7 +139,7 @@ const Profile = () => {
                 </Label>
                 <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
                   <SelectTrigger id="currency">
-                    <SelectValue placeholder="Select currency" />
+                    <SelectValue placeholder={t("profile.selectCurrency")} />
                   </SelectTrigger>
                   <SelectContent>
                     {currencies.map((curr) => (
@@ -161,7 +161,7 @@ const Profile = () => {
                 </Label>
                 <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
                   <SelectTrigger id="language">
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder={t("profile.selectLanguage")} />
                   </SelectTrigger>
                   <SelectContent>
                     {languages.map((lang) => (
@@ -189,7 +189,7 @@ const Profile = () => {
                   <Input
                     id="name"
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder={t("profile.namePlaceholder")}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="pl-10"
@@ -205,7 +205,7 @@ const Profile = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t("profile.emailPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -221,7 +221,7 @@ const Profile = () => {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="Enter your phone number"
+                    placeholder={t("profile.phonePlaceholder")}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="pl-10"
@@ -250,7 +250,7 @@ const Profile = () => {
                   <Input
                     id="new-password"
                     type={showNewPassword ? "text" : "password"}
-                    placeholder="Enter new password (min 6 characters)"
+                    placeholder={t("profile.passwordPlaceholder")}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="pl-10 pr-10"
@@ -274,7 +274,7 @@ const Profile = () => {
                   <Input
                     id="confirm-password"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm new password"
+                    placeholder={t("profile.confirmPasswordPlaceholder")}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="pl-10 pr-10"

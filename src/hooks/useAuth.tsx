@@ -3,10 +3,13 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
+export type AppRole = "owner" | "sales_rep";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  userRole: AppRole | null;
   signUp: (email: string, password: string, name: string, phone?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -20,7 +23,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<AppRole | null>(null);
   const navigate = useNavigate();
+
+  // Fetch user role from user_roles table
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user role:", error);
+        // Default to owner if role fetch fails (e.g. for older accounts)
+        setUserRole("owner");
+        return;
+      }
+
+      setUserRole(data.role as AppRole);
+    } catch (err) {
+      console.error("Error fetching user role:", err);
+      setUserRole("owner");
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -29,6 +57,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Fetch role when user logs in (defer to avoid auth deadlock)
+        if (session?.user) {
+          setTimeout(() => fetchUserRole(session.user.id), 0);
+        } else {
+          setUserRole(null);
+        }
       }
     );
 
@@ -37,6 +72,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      if (session?.user) {
+        fetchUserRole(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -85,7 +124,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, resetPassword, updatePassword }}>
+    <AuthContext.Provider value={{ user, session, loading, userRole, signUp, signIn, signOut, resetPassword, updatePassword }}>
       {children}
     </AuthContext.Provider>
   );

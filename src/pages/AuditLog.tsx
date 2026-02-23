@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Shield, TrendingUp, TrendingDown, Package, ShoppingCart } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 import {
   Table,
   TableBody,
@@ -26,6 +27,7 @@ interface AuditLog {
 const AuditLog = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { t } = useSettings();
 
   useEffect(() => {
     fetchLogs();
@@ -63,7 +65,7 @@ const AuditLog = () => {
 
       setLogs(data || []);
     } catch (error: any) {
-      toast.error("Failed to load audit logs");
+      toast.error(t("audit.loadFailed"));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -103,29 +105,29 @@ const AuditLog = () => {
           <Shield className="h-8 w-8 text-primary" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Audit Log</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t("audit.title")}</h1>
           <p className="text-muted-foreground">
-            Complete history of all inventory changes
+            {t("audit.subtitle")}
           </p>
         </div>
       </div>
 
       <Card className="p-6">
         {isLoading ? (
-          <p className="text-center text-muted-foreground py-8">Loading logs...</p>
+          <p className="text-center text-muted-foreground py-8">{t("common.loading")}</p>
         ) : logs.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No activity yet</p>
+          <p className="text-center text-muted-foreground py-8">{t("audit.noLogs")}</p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date & Time</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead className="text-right">Change</TableHead>
-                  <TableHead className="text-right">Previous Stock</TableHead>
-                  <TableHead className="text-right">New Stock</TableHead>
+                  <TableHead>{t("audit.date")}</TableHead>
+                  <TableHead>{t("audit.product")}</TableHead>
+                  <TableHead>{t("audit.action")}</TableHead>
+                  <TableHead className="text-right">{t("audit.quantity")}</TableHead>
+                  <TableHead className="text-right">{t("audit.previousStock")}</TableHead>
+                  <TableHead className="text-right">{t("audit.newStock")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -135,20 +137,21 @@ const AuditLog = () => {
                       {new Date(log.created_at).toLocaleString()}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {log.products?.name || "Unknown"}
+                      {log.products?.name || t("common.unknown")}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {getActionIcon(log.action_type)}
                         <span className={`capitalize ${getActionColor(log.action_type)}`}>
-                          {log.action_type}
+                          {log.action_type === "sale" ? t("audit.actionSale") :
+                            log.action_type === "restock" ? t("audit.actionRestock") :
+                              log.action_type === "adjustment" ? t("audit.actionAdjustment") : log.action_type}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell
-                      className={`text-right font-semibold ${
-                        log.change_quantity > 0 ? "text-green-500" : "text-red-500"
-                      }`}
+                      className={`text-right font-semibold ${log.change_quantity > 0 ? "text-green-500" : "text-red-500"
+                        }`}
                     >
                       {log.change_quantity > 0 ? "+" : ""}
                       {log.change_quantity}

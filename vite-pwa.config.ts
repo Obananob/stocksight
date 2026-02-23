@@ -4,8 +4,8 @@ export const pwaConfig: Partial<VitePWAOptions> = {
   registerType: 'autoUpdate',
   includeAssets: ['favicon.png'],
   manifest: {
-    name: 'StockSight - Inventory & Sales Tracking',
-    short_name: 'StockSight',
+    name: 'ShopCount - Inventory & Sales Tracking',
+    short_name: 'ShopCount',
     description: 'Real-time inventory and sales tracking for small shop owners',
     theme_color: '#2ECC71',
     background_color: '#ffffff',
@@ -41,6 +41,6 @@ export const pwaConfig: Partial<VitePWAOptions> = {
     ],
   },
   devOptions: {
-    enabled: true,
+    enabled: false,
   },
 };

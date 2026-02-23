@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Smartphone, Download, Check } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const Install = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const { t } = useSettings();
 
   useEffect(() => {
     // Check if already installed
@@ -45,8 +47,8 @@ const Install = () => {
           <Smartphone className="h-8 w-8 text-primary" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Install StockSight</h1>
-          <p className="text-muted-foreground">Get the mobile app experience</p>
+          <h1 className="text-3xl font-bold text-foreground">{t("install.title")}</h1>
+          <p className="text-muted-foreground">{t("install.subtitle")}</p>
         </div>
       </div>
 
@@ -55,32 +57,32 @@ const Install = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
             <Check className="h-8 w-8 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">App Installed!</h2>
+          <h2 className="text-2xl font-bold mb-2">{t("install.installedTitle")}</h2>
           <p className="text-muted-foreground">
-            StockSight is now installed on your device. You can access it from your home screen.
+            {t("install.installedDesc")}
           </p>
         </Card>
       ) : (
         <Card className="p-8">
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-4">Why Install StockSight?</h2>
+              <h2 className="text-xl font-semibold mb-4">{t("install.whyTitle")}</h2>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-primary mt-0.5" />
-                  <span>Works offline - Record sales even without internet</span>
+                  <span>{t("install.feature1")}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-primary mt-0.5" />
-                  <span>Quick access from home screen</span>
+                  <span>{t("install.feature2")}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-primary mt-0.5" />
-                  <span>Fast loading and smooth performance</span>
+                  <span>{t("install.feature3")}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-primary mt-0.5" />
-                  <span>Full-screen app experience</span>
+                  <span>{t("install.feature4")}</span>
                 </li>
               </ul>
             </div>
@@ -92,22 +94,22 @@ const Install = () => {
                 onClick={handleInstall}
               >
                 <Download className="mr-2 h-5 w-5" />
-                Install App
+                {t("install.button")}
               </Button>
             ) : (
               <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-accent">
                   <p className="text-sm text-muted-foreground">
-                    To install StockSight on your device:
+                    {t("install.howTitle")}
                   </p>
                   <ul className="mt-2 space-y-2 text-sm">
                     <li className="flex items-start gap-2">
                       <span className="font-semibold">iPhone/iPad:</span>
-                      <span>Tap the Share button, then "Add to Home Screen"</span>
+                      <span>{t("install.howIos")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="font-semibold">Android:</span>
-                      <span>Tap the menu (⋮), then "Add to Home Screen" or "Install App"</span>
+                      <span>{t("install.howAndroid")}</span>
                     </li>
                   </ul>
                 </div>
@@ -118,15 +120,15 @@ const Install = () => {
       )}
 
       <Card className="p-6">
-        <h3 className="font-semibold mb-3">Features Available Offline:</h3>
+        <h3 className="font-semibold mb-3">{t("install.offlineTitle")}</h3>
         <ul className="space-y-2 text-sm text-muted-foreground">
-          <li>• Record sales transactions</li>
-          <li>• View product inventory</li>
-          <li>• Check low stock alerts</li>
-          <li>• Access recent activity</li>
+          <li>• {t("install.offline1")}</li>
+          <li>• {t("install.offline2")}</li>
+          <li>• {t("install.offline3")}</li>
+          <li>• {t("install.offline4")}</li>
         </ul>
         <p className="text-sm text-muted-foreground mt-4">
-          All offline actions will automatically sync when you're back online.
+          {t("install.syncNote")}
         </p>
       </Card>
     </div>

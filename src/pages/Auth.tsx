@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,12 @@ import { Package, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { user, signIn, signUp, resetPassword } = useAuth();
+  const { t } = useSettings();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -33,15 +35,16 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     const { error } = await signIn(loginEmail, loginPassword);
-    
+
     setIsLoading(false);
-    
+
     if (error) {
-      toast.error(error.message || "Login failed");
+      console.error("Login raw error:", error);
+      toast.error(error.message || t("auth.failed") || "Login failed");
     } else {
-      toast.success("Login successful!");
+      toast.success(t("auth.loginSuccess"));
       navigate("/dashboard");
     }
   };
@@ -49,15 +52,16 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     const { error } = await signUp(signupEmail, signupPassword, signupName, signupPhone);
-    
+
     setIsLoading(false);
-    
+
     if (error) {
-      toast.error(error.message || "Signup failed");
+      console.error("Signup raw error:", error);
+      toast.error(error.message || t("auth.failed") || "Signup failed");
     } else {
-      toast.success("Account created successfully!");
+      toast.success(t("auth.signupSuccess"));
       navigate("/dashboard");
     }
   };
@@ -65,15 +69,15 @@ const Auth = () => {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     const { error } = await resetPassword(resetEmail);
-    
+
     setIsLoading(false);
-    
+
     if (error) {
-      toast.error(error.message || "Failed to send reset email");
+      toast.error(error.message || t("auth.resetFailed") || "Failed to send reset email");
     } else {
-      toast.success("Password reset email sent! Check your inbox.");
+      toast.success(t("auth.resetLinkSent"));
       setShowForgotPassword(false);
       setResetEmail("");
     }
@@ -87,19 +91,19 @@ const Auth = () => {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
             <Package className="h-8 w-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">StockSight</h1>
+          <h1 className="text-3xl font-bold text-foreground">ShopCount</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Inventory & Sales Tracking for Small Businesses
+            {t("auth.tagline")}
           </p>
         </div>
 
         <Card className="p-6">
           {showForgotPassword ? (
             <div>
-              <h2 className="text-xl font-semibold mb-4 text-foreground">Reset Password</h2>
+              <h2 className="text-xl font-semibold mb-4 text-foreground">{t("auth.resetPasswordTitle")}</h2>
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="reset-email">Email</Label>
+                  <Label htmlFor="reset-email">{t("auth.emailLabel")}</Label>
                   <Input
                     id="reset-email"
                     type="email"
@@ -114,7 +118,7 @@ const Auth = () => {
                   className="w-full bg-primary hover:bg-primary-hover"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Sending..." : "Send Reset Link"}
+                  {isLoading ? t("auth.sending") : t("auth.resetLinkButton")}
                 </Button>
                 <Button
                   type="button"
@@ -122,37 +126,37 @@ const Auth = () => {
                   className="w-full"
                   onClick={() => setShowForgotPassword(false)}
                 >
-                  Back to Login
+                  {t("auth.backToLogin")}
                 </Button>
               </form>
             </div>
           ) : (
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="login">{t("auth.loginTab")}</TabsTrigger>
+                <TabsTrigger value="signup">{t("auth.signupTab")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t("auth.emailLabel")}</Label>
                     <Input
                       id="email"
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder={t("auth.emailPlaceholder")}
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{t("auth.passwordLabel")}</Label>
                     <div className="relative">
                       <Input
                         id="password"
                         type={showLoginPassword ? "text" : "password"}
-                        placeholder="Enter your password"
+                        placeholder={t("auth.passwordPlaceholder")}
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         required
@@ -173,14 +177,14 @@ const Auth = () => {
                     className="w-full text-sm text-primary"
                     onClick={() => setShowForgotPassword(true)}
                   >
-                    Forgot password?
+                    {t("auth.forgotPassword")}
                   </Button>
                   <Button
                     type="submit"
                     className="w-full bg-primary hover:bg-primary-hover"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Logging in..." : "Login"}
+                    {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}
                   </Button>
                 </form>
               </TabsContent>
@@ -188,18 +192,18 @@ const Auth = () => {
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">{t("auth.signupNameLabel")}</Label>
                     <Input
                       id="name"
                       type="text"
-                      placeholder="Enter your full name"
+                      placeholder={t("auth.signupNamePlaceholder")}
                       value={signupName}
                       onChange={(e) => setSignupName(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t("auth.emailLabel")}</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -210,22 +214,22 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number (Optional)</Label>
+                    <Label htmlFor="phone">{t("auth.signupPhoneLabel")}</Label>
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="Enter your phone number"
+                      placeholder={t("auth.signupPhonePlaceholder")}
                       value={signupPhone}
                       onChange={(e) => setSignupPhone(e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">{t("auth.signupPasswordLabel")}</Label>
                     <div className="relative">
                       <Input
                         id="signup-password"
                         type={showSignupPassword ? "text" : "password"}
-                        placeholder="Create a password (min 6 characters)"
+                        placeholder={t("auth.signupPasswordPlaceholder")}
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
                         required
@@ -246,7 +250,7 @@ const Auth = () => {
                     className="w-full bg-primary hover:bg-primary-hover"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Creating account..." : "Create Account"}
+                    {isLoading ? t("auth.signingUp") : t("auth.signupButton")}
                   </Button>
                 </form>
               </TabsContent>
@@ -255,7 +259,7 @@ const Auth = () => {
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          By continuing, you agree to our Terms of Service and Privacy Policy
+          {t("auth.termsNote")}
         </p>
       </div>
     </div>

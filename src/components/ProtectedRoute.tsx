@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
-export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+export const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
+  const { user, loading, userRole } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,6 +25,10 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!user) {
     return null;
+  }
+
+  if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
+    return <Navigate to="/sales" replace />;
   }
 
   return <>{children}</>;

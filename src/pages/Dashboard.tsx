@@ -66,7 +66,7 @@ const Dashboard = () => {
       if (productsError) throw productsError;
 
       const stockValue = productsData?.reduce(
-        (sum, product) => sum + (product.current_stock * Number(product.cost_price)), 
+        (sum, product) => sum + (product.current_stock * Number(product.cost_price)),
         0
       ) || 0;
 
@@ -100,13 +100,17 @@ const Dashboard = () => {
       const profilesMap = new Map(profilesData?.map(p => [p.id, p.name]) || []);
 
       const activity = logsData?.map(log => {
-        const productName = (log.products as any)?.name || 'Unknown Product';
-        const userName = profilesMap.get(log.user_id) || 'System';
+        const productName = (log.products as any)?.name || t("common.unknownProduct");
+        const userName = profilesMap.get(log.user_id) || t("common.system");
         const timeAgo = getTimeAgo(new Date(log.created_at));
-        
+
+        let action = t("dashboard.stockAdjusted");
+        if (log.action_type === 'add') action = t("dashboard.stockAdded");
+        if (log.action_type === 'sale') action = t("dashboard.saleRecorded");
+
         return {
           id: log.id,
-          action: log.action_type === 'add' ? 'Stock added' : log.action_type === 'sale' ? 'Sale recorded' : 'Stock adjusted',
+          action,
           item: productName,
           user: userName,
           time: timeAgo,
@@ -183,42 +187,43 @@ const Dashboard = () => {
 
   const getTimeAgo = (date: Date): string => {
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    
-    if (seconds < 60) return `${seconds} seconds ago`;
+
+    if (seconds < 60) return `${seconds} ${t("common.secondsAgo")}`;
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+    if (minutes < 60) return `${minutes} ${minutes === 1 ? t("common.minuteAgo") : t("common.minutesAgo")}`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    if (hours < 24) return `${hours} ${hours === 1 ? t("common.hourAgo") : t("common.hoursAgo")}`;
     const days = Math.floor(hours / 24);
-    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+    if (days < 7) return `${days} ${days === 1 ? t("common.dayAgo") : t("common.daysAgo")}`;
+    return date.toLocaleDateString();
   };
 
   const statsConfig = [
     {
-      title: "Today's Sales",
+      title: t("dashboard.todaySales"),
       value: formatCurrency(stats.todaySales),
-      change: loading ? "..." : `${stats.productsSoldToday} items sold`,
+      change: loading ? "..." : `${stats.productsSoldToday} ${t("dashboard.productsSold")}`,
       icon: TrendingUp,
       trend: "up",
     },
     {
-      title: "Current Stock Value",
+      title: t("dashboard.totalStock"),
       value: formatCurrency(stats.stockValue),
-      change: loading ? "..." : "Total inventory",
+      change: loading ? "..." : t("dashboard.totalInventory"),
       icon: Package,
       trend: "neutral",
     },
     {
-      title: "Low Stock Items",
+      title: t("dashboard.lowStock"),
       value: stats.lowStockCount.toString(),
-      change: stats.lowStockCount > 0 ? `${stats.lowStockCount} need attention` : "All good",
+      change: stats.lowStockCount > 0 ? `${stats.lowStockCount} ${t("dashboard.needAttention")}` : t("dashboard.allGood"),
       icon: AlertTriangle,
       trend: stats.lowStockCount > 0 ? "warning" : "neutral",
     },
     {
-      title: "Products Sold Today",
+      title: t("dashboard.productsSold"),
       value: stats.productsSoldToday.toString(),
-      change: loading ? "..." : "Units",
+      change: loading ? "..." : t("dashboard.units"),
       icon: Activity,
       trend: "up",
     },
@@ -242,8 +247,8 @@ const Dashboard = () => {
         <div className="mx-auto max-w-7xl">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Welcome back! Here's your business overview</p>
+              <h1 className="text-3xl font-bold text-foreground">{t("dashboard.title")}</h1>
+              <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
             </div>
             <Button
               onClick={signOut}
@@ -251,7 +256,7 @@ const Dashboard = () => {
               className="flex items-center gap-2"
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              {t("nav.signout")}
             </Button>
           </div>
         </div>
@@ -268,25 +273,23 @@ const Dashboard = () => {
                   <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
                   <h3 className="mt-2 text-3xl font-bold text-foreground">{stat.value}</h3>
                   <p
-                    className={`mt-2 text-sm font-medium ${
-                      stat.trend === "up"
-                        ? "text-success"
-                        : stat.trend === "warning"
+                    className={`mt-2 text-sm font-medium ${stat.trend === "up"
+                      ? "text-success"
+                      : stat.trend === "warning"
                         ? "text-warning"
                         : "text-muted-foreground"
-                    }`}
+                      }`}
                   >
                     {stat.change}
                   </p>
                 </div>
                 <div
-                  className={`rounded-lg p-3 ${
-                    stat.trend === "up"
-                      ? "bg-accent text-accent-foreground"
-                      : stat.trend === "warning"
+                  className={`rounded-lg p-3 ${stat.trend === "up"
+                    ? "bg-accent text-accent-foreground"
+                    : stat.trend === "warning"
                       ? "bg-warning/10 text-warning"
                       : "bg-muted text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   <stat.icon className="h-6 w-6" />
                 </div>
@@ -298,10 +301,10 @@ const Dashboard = () => {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Recent Activity */}
           <Card className="p-6">
-            <h2 className="mb-4 text-xl font-semibold text-foreground">Recent Activity</h2>
+            <h2 className="text-xl font-semibold">{t("dashboard.recentActivity")}</h2>
             <div className="space-y-4">
               {recentActivity.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No recent activity</p>
+                <p className="text-sm text-muted-foreground">{t("dashboard.noActivity")}</p>
               ) : (
                 recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-4 border-b pb-4 last:border-0 last:pb-0">
@@ -323,48 +326,48 @@ const Dashboard = () => {
 
           {/* Quick Actions */}
           <Card className="p-6">
-            <h2 className="mb-4 text-xl font-semibold text-foreground">Quick Actions</h2>
+            <h2 className="text-xl font-semibold">{t("dashboard.quickActions")}</h2>
             <div className="grid gap-3">
-              <Button 
-                className="w-full justify-start bg-primary hover:bg-primary-hover" 
+              <Button
+                className="w-full justify-start bg-primary hover:bg-primary-hover"
                 size="lg"
                 onClick={() => navigate('/inventory')}
               >
                 <Package className="mr-2 h-5 w-5" />
-                Manage Inventory
+                {t("inventory.manageInventory")}
               </Button>
-              <Button 
-                className="w-full justify-start" 
-                variant="outline" 
+              <Button
+                className="w-full justify-start"
+                variant="outline"
                 size="lg"
                 onClick={() => navigate('/sales')}
               >
                 <TrendingUp className="mr-2 h-5 w-5" />
-                Record Sale
+                {t("sales.title")}
               </Button>
-              <Button 
-                className="w-full justify-start" 
-                variant="outline" 
+              <Button
+                className="w-full justify-start"
+                variant="outline"
                 size="lg"
                 onClick={() => navigate('/reports')}
               >
                 <Activity className="mr-2 h-5 w-5" />
-                View Reports
+                {t("reports.title")}
               </Button>
-              <Button 
-                className="w-full justify-start" 
-                variant="outline" 
+              <Button
+                className="w-full justify-start"
+                variant="outline"
                 size="lg"
                 onClick={() => navigate('/reconciliation')}
               >
                 <AlertTriangle className="mr-2 h-5 w-5" />
-                Reconciliation
+                {t("reconciliation.title")}
               </Button>
             </div>
           </Card>
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   );
 };
 

@@ -23,14 +23,15 @@ interface Product {
 }
 
 const Inventory = () => {
-  const { signOut, user } = useAuth();
-  const { formatCurrency, getCurrencyInfo } = useSettings();
+  const { signOut, user, userRole } = useAuth();
+  const { formatCurrency, getCurrencyInfo, t } = useSettings();
+  const isOwner = userRole === 'owner';
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [editProductOpen, setEditProductOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  
+
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -94,7 +95,7 @@ const Inventory = () => {
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const { data: product, error: productError } = await supabase
         .from('products')
@@ -138,7 +139,7 @@ const Inventory = () => {
 
   const handleAddStock = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedProduct) return;
 
     try {
@@ -169,7 +170,7 @@ const Inventory = () => {
       setStockQuantity("");
       setSelectedProduct(null);
       loadProducts();
-      
+
       // Close the dialog
       const closeButton = document.querySelector('[data-state="open"] button[type="button"]') as HTMLButtonElement;
       closeButton?.click();
@@ -198,7 +199,7 @@ const Inventory = () => {
 
   const handleEditProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedProduct) return;
 
     try {
@@ -275,74 +276,147 @@ const Inventory = () => {
         <div className="mx-auto max-w-7xl">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Inventory Management</h1>
-              <p className="text-sm text-muted-foreground">Manage your products and stock levels</p>
+              <h1 className="text-2xl font-bold text-foreground">{t("inventory.title")}</h1>
+              <p className="text-sm text-muted-foreground">{t("inventory.subtitle")}</p>
             </div>
             <div className="flex gap-2">
-              <Dialog open={addProductOpen} onOpenChange={setAddProductOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-primary hover:bg-primary-hover">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Product
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Product</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleAddProduct} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="productName">Product Name</Label>
-                      <Input
-                        id="productName"
-                        value={productName}
-                        onChange={(e) => setProductName(e.target.value)}
-                        placeholder="e.g., Coca-Cola 50cl"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+              {isOwner && (
+                <Dialog open={addProductOpen} onOpenChange={setAddProductOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-primary hover:bg-primary-hover">
+                      <Plus className="mr-2 h-4 w-4" />
+                      {t("inventory.addProduct")}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>{t("inventory.addProduct")}</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleAddProduct} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="costPrice">Cost Price ({currencySymbol})</Label>
+                        <Label htmlFor="productName">{t("inventory.productName")}</Label>
                         <Input
-                          id="costPrice"
-                          type="number"
-                          step="0.01"
-                          value={costPrice}
-                          onChange={(e) => setCostPrice(e.target.value)}
-                          placeholder="0.00"
+                          id="productName"
+                          value={productName}
+                          onChange={(e) => setProductName(e.target.value)}
+                          placeholder="e.g., Coca-Cola 50cl"
                           required
                         />
                       </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="costPrice">{t("inventory.costPrice")} ({currencySymbol})</Label>
+                          <Input
+                            id="costPrice"
+                            type="number"
+                            step="0.01"
+                            value={costPrice}
+                            onChange={(e) => setCostPrice(e.target.value)}
+                            placeholder="0.00"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="unitPrice">{t("inventory.sellingPrice")} ({currencySymbol})</Label>
+                          <Input
+                            id="unitPrice"
+                            type="number"
+                            step="0.01"
+                            value={unitPrice}
+                            onChange={(e) => setUnitPrice(e.target.value)}
+                            placeholder="0.00"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="initialStock">{t("inventory.initialStock")}</Label>
+                          <Input
+                            id="initialStock"
+                            type="number"
+                            value={initialStock}
+                            onChange={(e) => setInitialStock(e.target.value)}
+                            placeholder="0"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lowStockThreshold">{t("inventory.threshold")}</Label>
+                          <Input
+                            id="lowStockThreshold"
+                            type="number"
+                            value={lowStockThreshold}
+                            onChange={(e) => setLowStockThreshold(e.target.value)}
+                            placeholder="10"
+                            required
+                          />
+                        </div>
+                      </div>
                       <div className="space-y-2">
-                        <Label htmlFor="unitPrice">Selling Price ({currencySymbol})</Label>
+                        <Label htmlFor="category">{t("inventory.categoryOptional")}</Label>
                         <Input
-                          id="unitPrice"
-                          type="number"
-                          step="0.01"
-                          value={unitPrice}
-                          onChange={(e) => setUnitPrice(e.target.value)}
-                          placeholder="0.00"
+                          id="category"
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                          placeholder="e.g., Beverages, Snacks"
+                        />
+                      </div>
+                      <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
+                        {t("inventory.addProduct")}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
+
+              {isOwner && (
+                <Dialog open={editProductOpen} onOpenChange={setEditProductOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>{t("inventory.editProduct")}</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleEditProduct} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="editProductName">{t("inventory.productName")}</Label>
+                        <Input
+                          id="editProductName"
+                          value={productName}
+                          onChange={(e) => setProductName(e.target.value)}
+                          placeholder="e.g., Coca-Cola 50cl"
                           required
                         />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="initialStock">Initial Stock</Label>
-                        <Input
-                          id="initialStock"
-                          type="number"
-                          value={initialStock}
-                          onChange={(e) => setInitialStock(e.target.value)}
-                          placeholder="0"
-                          required
-                        />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="editCostPrice">{t("inventory.costPrice")} ({currencySymbol})</Label>
+                          <Input
+                            id="editCostPrice"
+                            type="number"
+                            step="0.01"
+                            value={costPrice}
+                            onChange={(e) => setCostPrice(e.target.value)}
+                            placeholder="0.00"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="editUnitPrice">{t("inventory.sellingPrice")} ({currencySymbol})</Label>
+                          <Input
+                            id="editUnitPrice"
+                            type="number"
+                            step="0.01"
+                            value={unitPrice}
+                            onChange={(e) => setUnitPrice(e.target.value)}
+                            placeholder="0.00"
+                            required
+                          />
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lowStockThreshold">Low Stock Alert</Label>
+                        <Label htmlFor="editLowStockThreshold">{t("inventory.threshold")}</Label>
                         <Input
-                          id="lowStockThreshold"
+                          id="editLowStockThreshold"
                           type="number"
                           value={lowStockThreshold}
                           onChange={(e) => setLowStockThreshold(e.target.value)}
@@ -350,91 +424,22 @@ const Inventory = () => {
                           required
                         />
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Category (Optional)</Label>
-                      <Input
-                        id="category"
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        placeholder="e.g., Beverages, Snacks"
-                      />
-                    </div>
-                    <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
-                      Add Product
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-              
-              <Dialog open={editProductOpen} onOpenChange={setEditProductOpen}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Edit Product</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleEditProduct} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="editProductName">Product Name</Label>
-                      <Input
-                        id="editProductName"
-                        value={productName}
-                        onChange={(e) => setProductName(e.target.value)}
-                        placeholder="e.g., Coca-Cola 50cl"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="editCostPrice">Cost Price ({currencySymbol})</Label>
+                        <Label htmlFor="editCategory">{t("inventory.categoryOptional")}</Label>
                         <Input
-                          id="editCostPrice"
-                          type="number"
-                          step="0.01"
-                          value={costPrice}
-                          onChange={(e) => setCostPrice(e.target.value)}
-                          placeholder="0.00"
-                          required
+                          id="editCategory"
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                          placeholder="e.g., Beverages, Snacks"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="editUnitPrice">Selling Price ({currencySymbol})</Label>
-                        <Input
-                          id="editUnitPrice"
-                          type="number"
-                          step="0.01"
-                          value={unitPrice}
-                          onChange={(e) => setUnitPrice(e.target.value)}
-                          placeholder="0.00"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="editLowStockThreshold">Low Stock Alert</Label>
-                      <Input
-                        id="editLowStockThreshold"
-                        type="number"
-                        value={lowStockThreshold}
-                        onChange={(e) => setLowStockThreshold(e.target.value)}
-                        placeholder="10"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="editCategory">Category (Optional)</Label>
-                      <Input
-                        id="editCategory"
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        placeholder="e.g., Beverages, Snacks"
-                      />
-                    </div>
-                    <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
-                      Update Product
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                      <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
+                        {t("inventory.updateProduct")}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
               <Button onClick={signOut} variant="outline">
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -451,7 +456,7 @@ const Inventory = () => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search products..."
+                placeholder={t("inventory.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -460,10 +465,10 @@ const Inventory = () => {
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder={t("inventory.allCategories")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{t("inventory.allCategories")}</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
@@ -471,46 +476,50 @@ const Inventory = () => {
             </Select>
           </div>
         )}
-        
+
         {products.length === 0 ? (
           <Card className="p-12 text-center">
             <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No products yet</h3>
+            <h3 className="text-lg font-semibold mb-2">{t("inventory.noProducts")}</h3>
             <p className="text-muted-foreground mb-4">
-              Get started by adding your first product to the inventory
+              {t("inventory.noProductsHint")}
             </p>
-            <Button onClick={() => setAddProductOpen(true)} className="bg-primary hover:bg-primary-hover">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Your First Product
-            </Button>
+            {isOwner && (
+              <Button onClick={() => setAddProductOpen(true)} className="bg-primary hover:bg-primary-hover">
+                <Plus className="mr-2 h-4 w-4" />
+                {t("inventory.addProductFirst")}
+              </Button>
+            )}
           </Card>
         ) : filteredProducts.length === 0 ? (
           <Card className="p-12 text-center">
             <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No products found</h3>
+            <h3 className="text-lg font-semibold mb-2">{t("inventory.noProductsFound")}</h3>
             <p className="text-muted-foreground">
-              Try adjusting your search or filter criteria
+              {t("inventory.adjustSearch")}
             </p>
           </Card>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredProducts.map((product) => {
               const isLowStock = product.current_stock <= product.low_stock_threshold;
-              
+
               return (
                 <Card key={product.id} className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-lg text-foreground">{product.name}</h3>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => openEditDialog(product)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        {isOwner && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => openEditDialog(product)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                       {product.category && (
                         <span className="text-xs text-muted-foreground bg-accent px-2 py-1 rounded-full mt-1 inline-block">
@@ -521,108 +530,112 @@ const Inventory = () => {
                         <span className={`text-2xl font-bold ${isLowStock ? 'text-warning' : 'text-foreground'}`}>
                           {product.current_stock}
                         </span>
-                        <span className="text-sm text-muted-foreground">in stock</span>
+                        <span className="text-sm text-muted-foreground">{t("inventory.inStock")}</span>
                       </div>
                     </div>
                     {isLowStock && (
                       <AlertTriangle className="h-5 w-5 text-warning" />
                     )}
                   </div>
-                  
+
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Cost Price:</span>
+                      <span className="text-muted-foreground">{t("inventory.costPrice")}:</span>
                       <span className="font-medium">{formatCurrency(product.cost_price)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Selling Price:</span>
+                      <span className="text-muted-foreground">{t("inventory.sellingPrice")}:</span>
                       <span className="font-medium">{formatCurrency(product.unit_price)}</span>
                     </div>
                     <div className="flex justify-between text-sm border-t pt-2">
-                      <span className="text-muted-foreground font-semibold">Profit/Unit:</span>
+                      <span className="text-muted-foreground font-semibold">{t("inventory.profitUnit")}:</span>
                       <span className="font-bold text-primary">
                         {formatCurrency(product.unit_price - product.cost_price)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Low Stock Alert:</span>
-                      <span className="font-medium">{product.low_stock_threshold} units</span>
+                      <span className="text-muted-foreground">{t("inventory.threshold")}:</span>
+                      <span className="font-medium">{product.low_stock_threshold} {t("dashboard.units").toLowerCase()}</span>
                     </div>
                   </div>
 
                   {isLowStock && (
                     <div className="mb-4 rounded-lg bg-warning/10 p-3">
                       <p className="text-sm text-warning font-medium">
-                        ⚠️ Low stock alert! Only {product.current_stock} units remaining.
+                        ⚠️ {t("inventory.threshold")}! {t("inventory.inStock")} {product.current_stock}.
                       </p>
                     </div>
                   )}
-                  
+
                   <div className="flex gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          className="flex-1 bg-primary hover:bg-primary-hover"
-                          onClick={() => {
-                            setSelectedProduct(product);
-                            setStockQuantity("");
-                          }}
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          Add Stock
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Add Stock - {product.name}</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleAddStock} className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="stockQuantity">Quantity to Add</Label>
-                            <Input
-                              id="stockQuantity"
-                              type="number"
-                              value={stockQuantity}
-                              onChange={(e) => setStockQuantity(e.target.value)}
-                              placeholder="Enter quantity"
-                              min="1"
-                              required
-                            />
-                            <p className="text-sm text-muted-foreground">
-                              Current stock: {product.current_stock} units
-                            </p>
-                          </div>
-                          <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
-                            Add Stock
-                          </Button>
-                        </form>
-                      </DialogContent>
-                    </Dialog>
-                    
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="icon" className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Product?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{product.name}"? This action cannot be undone and will remove all associated inventory logs.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDeleteProduct(product.id, product.name)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    {isOwner && (
+                      <>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              className="flex-1 bg-primary hover:bg-primary-hover"
+                              onClick={() => {
+                                setSelectedProduct(product);
+                                setStockQuantity("");
+                              }}
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              {t("inventory.addStock")}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>{t("inventory.addStock")} - {product.name}</DialogTitle>
+                            </DialogHeader>
+                            <form onSubmit={handleAddStock} className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="stockQuantity">{t("inventory.stockQty")}</Label>
+                                <Input
+                                  id="stockQuantity"
+                                  type="number"
+                                  value={stockQuantity}
+                                  onChange={(e) => setStockQuantity(e.target.value)}
+                                  placeholder={t("inventory.enterQty")}
+                                  min="1"
+                                  required
+                                />
+                                <p className="text-sm text-muted-foreground">
+                                  {t("inventory.currentStockHint").replace("{count}", product.current_stock.toString())}
+                                </p>
+                              </div>
+                              <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
+                                {t("inventory.addStock")}
+                              </Button>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="icon" className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>{t("inventory.deleteConfirm")}</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {t("inventory.deleteDescription").replace("{name}", product.name)}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteProduct(product.id, product.name)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                {t("common.delete")}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    )}
                   </div>
                 </Card>
               );

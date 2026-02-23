@@ -19,7 +19,7 @@ interface ReconciliationRecord {
 }
 
 const Reconciliation = () => {
-  const { formatCurrency, getCurrencyInfo } = useSettings();
+  const { formatCurrency, getCurrencyInfo, t } = useSettings();
   const [records, setRecords] = useState<ReconciliationRecord[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [expectedCash, setExpectedCash] = useState("0");
@@ -53,19 +53,34 @@ const Reconciliation = () => {
     const endOfDay = new Date(selectedDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const { data, error } = await supabase
+    // Get total sales for the day
+    const { data: salesData, error: salesError } = await supabase
       .from("sales")
       .select("total_price")
       .gte("created_at", startOfDay.toISOString())
       .lte("created_at", endOfDay.toISOString());
 
-    if (error) {
-      console.error("Failed to calculate expected cash:", error);
+    if (salesError) {
+      console.error("Failed to fetch sales for calculation:", salesError);
       return;
     }
 
-    const total = data?.reduce((sum, sale) => sum + sale.total_price, 0) || 0;
-    setExpectedCash(total.toFixed(2));
+    // Get existing reconciliation for the day
+    const { data: reconData, error: reconError } = await supabase
+      .from("reconciliation")
+      .select("expected_cash")
+      .eq("date", selectedDate);
+
+    if (reconError) {
+      console.error("Failed to fetch reconciliation for calculation:", reconError);
+      return;
+    }
+
+    const totalSales = salesData?.reduce((sum, sale) => sum + sale.total_price, 0) || 0;
+    const reconciledAmount = reconData?.reduce((sum, record) => sum + record.expected_cash, 0) || 0;
+
+    const remainingExpected = Math.max(0, totalSales - reconciledAmount);
+    setExpectedCash(remainingExpected.toFixed(2));
   };
 
   const handleSubmit = async () => {
@@ -100,6 +115,7 @@ const Reconciliation = () => {
       setCashReceived("");
       setNotes("");
       fetchRecords();
+      calculateExpectedCash();
     } catch (error: any) {
       toast.error(error.message || "Failed to save reconciliation");
     } finally {
@@ -119,16 +135,16 @@ const Reconciliation = () => {
           <ClipboardList className="h-8 w-8 text-primary" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Cash Reconciliation</h1>
-          <p className="text-muted-foreground">Verify daily cash collections</p>
+          <h1 className="text-3xl font-bold text-foreground">{t("reconciliation.title")}</h1>
+          <p className="text-muted-foreground">{t("reconciliation.subtitle")}</p>
         </div>
       </div>
 
       <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-4">New Reconciliation</h3>
+        <h3 className="text-xl font-semibold mb-4">{t("reconciliation.new")}</h3>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
+            <Label htmlFor="date">{t("reconciliation.date")}</Label>
             <Input
               id="date"
               type="date"
@@ -140,33 +156,32 @@ const Reconciliation = () => {
           <div className="p-4 rounded-lg bg-accent">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="h-5 w-5 text-primary" />
-              <span className="font-semibold">Expected Cash</span>
+              <span className="font-semibold">{t("reconciliation.expected")}</span>
             </div>
             <p className="text-3xl font-bold text-foreground">{formatCurrency(parseFloat(expectedCash))}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Based on sales for {selectedDate}
+              {t("reconciliation.expectedHint")} {selectedDate}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cashReceived">Cash Received ({currencySymbol})</Label>
+            <Label htmlFor="cashReceived">{t("reconciliation.received")} ({currencySymbol})</Label>
             <Input
               id="cashReceived"
               type="number"
               step="0.01"
               value={cashReceived}
               onChange={(e) => setCashReceived(e.target.value)}
-              placeholder="Enter actual cash received"
+              placeholder={t("reconciliation.receivedPlaceholder")}
             />
           </div>
 
           {cashReceived && (
             <div
-              className={`p-4 rounded-lg border-2 ${
-                Math.abs(discrepancy) > 0.01
-                  ? "bg-destructive/10 border-destructive"
-                  : "bg-primary/10 border-primary"
-              }`}
+              className={`p-4 rounded-lg border-2 ${Math.abs(discrepancy) > 0.01
+                ? "bg-destructive/10 border-destructive"
+                : "bg-primary/10 border-primary"
+                }`}
             >
               <div className="flex items-center gap-2">
                 {Math.abs(discrepancy) > 0.01 ? (
@@ -175,22 +190,22 @@ const Reconciliation = () => {
                   <CheckCircle className="h-5 w-5 text-primary" />
                 )}
                 <span className="font-semibold">
-                  {Math.abs(discrepancy) > 0.01 ? "Discrepancy Detected" : "Perfect Match!"}
+                  {Math.abs(discrepancy) > 0.01 ? t("reconciliation.discrepancyDetected") : t("reconciliation.perfectMatch")}
                 </span>
               </div>
               <p className="text-2xl font-bold mt-2">
-                {formatCurrency(Math.abs(discrepancy))} {discrepancy > 0 ? "Short" : discrepancy < 0 ? "Over" : ""}
+                {formatCurrency(Math.abs(discrepancy))} {discrepancy > 0 ? t("reconciliation.short") : discrepancy < 0 ? t("reconciliation.over") : ""}
               </p>
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label htmlFor="notes">{t("reconciliation.notes")}</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add any notes about this reconciliation..."
+              placeholder={t("reconciliation.notesPlaceholder")}
               rows={3}
             />
           </div>
@@ -201,16 +216,16 @@ const Reconciliation = () => {
             onClick={handleSubmit}
             disabled={isLoading || !cashReceived}
           >
-            {isLoading ? "Saving..." : "Submit Reconciliation"}
+            {isLoading ? t("common.saving") : t("reconciliation.submit")}
           </Button>
         </div>
       </Card>
 
       <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-4">Recent Reconciliations</h3>
+        <h3 className="text-xl font-semibold mb-4">{t("reconciliation.history")}</h3>
         <div className="space-y-3">
           {records.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No records yet</p>
+            <p className="text-muted-foreground text-center py-4">{t("reconciliation.noRecords")}</p>
           ) : (
             records.map((record) => {
               const diff = record.expected_cash - record.cash_received;
@@ -220,7 +235,7 @@ const Reconciliation = () => {
                     <div>
                       <p className="font-semibold">{new Date(record.date).toLocaleDateString()}</p>
                       <p className="text-sm text-muted-foreground">
-                        Expected: {formatCurrency(record.expected_cash)} | Received: {formatCurrency(record.cash_received)}
+                        {t("reconciliation.expectedLabel")}: {formatCurrency(record.expected_cash)} | {t("reconciliation.receivedLabel")}: {formatCurrency(record.cash_received)}
                       </p>
                       {record.notes && (
                         <p className="text-sm text-muted-foreground mt-1">{record.notes}</p>
@@ -228,17 +243,16 @@ const Reconciliation = () => {
                     </div>
                     <div className="text-right">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${
-                          record.status === "approved"
-                            ? "bg-primary/10 text-primary"
-                            : "bg-destructive/10 text-destructive"
-                        }`}
+                        className={`px-2 py-1 rounded text-xs font-semibold ${record.status === "approved"
+                          ? "bg-primary/10 text-primary"
+                          : "bg-destructive/10 text-destructive"
+                          }`}
                       >
-                        {record.status}
+                        {record.status === "approved" ? t("reconciliation.statusApproved") : t("reconciliation.statusDisputed")}
                       </span>
                       {Math.abs(diff) > 0.01 && (
                         <p className="text-sm font-semibold mt-1">
-                          {formatCurrency(Math.abs(diff))} {diff > 0 ? "Short" : "Over"}
+                          {formatCurrency(Math.abs(diff))} {diff > 0 ? t("reconciliation.short") : t("reconciliation.over")}
                         </p>
                       )}
                     </div>
