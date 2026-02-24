@@ -38,16 +38,28 @@ export const syncService = {
 
     startSyncTimer: (intervalMs: number = 30000) => {
         // Initial sync
-        syncService.syncNow();
+        try {
+            syncService.syncNow();
+        } catch (error) {
+            console.error('Initial sync failed:', error);
+        }
 
         // Periodic sync
         setInterval(() => {
-            syncService.syncNow();
+            try {
+                syncService.syncNow();
+            } catch (error) {
+                console.error('Periodic sync failed:', error);
+            }
         }, intervalMs);
 
         // Sync on connection recovery
         window.addEventListener('online', () => {
-            syncService.syncNow();
+            try {
+                syncService.syncNow();
+            } catch (error) {
+                console.error('Online sync failed:', error);
+            }
         });
     }
 };
