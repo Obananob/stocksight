@@ -10,7 +10,6 @@ if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISH
 } else {
   console.log("Supabase client initializing with URL:", SUPABASE_URL.substring(0, 10) + "...");
 }
-
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 

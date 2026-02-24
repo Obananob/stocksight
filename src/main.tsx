@@ -4,4 +4,5 @@ import App from "./App.tsx";
 import "./index.css";
 
 console.log("Rendering App component...");
+// Application entry point
 createRoot(document.getElementById("root")!).render(<App />);
