@@ -7,8 +7,6 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY |
 
 if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
   console.error("Supabase environment variables are missing! Application will not function correctly.");
-} else {
-  console.log("Supabase client initializing with URL:", SUPABASE_URL.substring(0, 10) + "...");
 }
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

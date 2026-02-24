@@ -10,6 +10,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   userRole: AppRole | null;
+  ownerId: string | null;
   signUp: (email: string, password: string, name: string, phone?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -24,6 +25,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<AppRole | null>(null);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Fetch user role from user_roles table
@@ -31,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { data, error } = await supabase
         .from("user_roles")
-        .select("role")
+        .select("role, owner_id")
         .eq("user_id", userId)
         .limit(1)
         .single();
@@ -44,9 +46,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       setUserRole(data.role as AppRole);
+      setOwnerId(data.owner_id || userId); // If owner_id is null, the user IS the owner
     } catch (err) {
       console.error("Error fetching user role:", err);
       setUserRole("owner");
+      setOwnerId(userId);
     }
   };
 
@@ -124,7 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, userRole, signUp, signIn, signOut, resetPassword, updatePassword }}>
+    <AuthContext.Provider value={{ user, session, loading, userRole, ownerId, signUp, signIn, signOut, resetPassword, updatePassword }}>
       {children}
     </AuthContext.Provider>
   );

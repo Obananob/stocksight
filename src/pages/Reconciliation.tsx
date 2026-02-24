@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { ClipboardList, DollarSign, AlertCircle, CheckCircle } from "lucide-react";
 
@@ -20,22 +21,28 @@ interface ReconciliationRecord {
 
 const Reconciliation = () => {
   const { formatCurrency, getCurrencyInfo, t } = useSettings();
+  const { user, ownerId } = useAuth();
   const [records, setRecords] = useState<ReconciliationRecord[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [expectedCash, setExpectedCash] = useState("0");
   const [cashReceived, setCashReceived] = useState("");
+  const [isPartial, setIsPartial] = useState(false);
   const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    fetchRecords();
-    calculateExpectedCash();
-  }, [selectedDate]);
+    if (ownerId) {
+      fetchRecords();
+      calculateExpectedCash();
+    }
+  }, [selectedDate, ownerId]);
 
   const fetchRecords = async () => {
+    if (!ownerId) return;
     const { data, error } = await supabase
       .from("reconciliation")
       .select("*")
+      .eq("owner_id", ownerId)
       .order("date", { ascending: false })
       .limit(10);
 
@@ -48,15 +55,26 @@ const Reconciliation = () => {
   };
 
   const calculateExpectedCash = async () => {
+    if (!ownerId) return;
+
     const startOfDay = new Date(selectedDate);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(selectedDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Get total sales for the day
+    // Get team member IDs including owner to scope sales
+    const { data: teamMembers } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .or(`owner_id.eq.${ownerId},user_id.eq.${ownerId}`);
+
+    const teamIds = teamMembers?.map(m => m.user_id) || [ownerId];
+
+    // Get total sales for the day from the entire team
     const { data: salesData, error: salesError } = await supabase
       .from("sales")
       .select("total_price")
+      .in("user_id", teamIds)
       .gte("created_at", startOfDay.toISOString())
       .lte("created_at", endOfDay.toISOString());
 
@@ -65,10 +83,11 @@ const Reconciliation = () => {
       return;
     }
 
-    // Get existing reconciliation for the day
+    // Get existing reconciliation for the day for this owner
     const { data: reconData, error: reconError } = await supabase
       .from("reconciliation")
       .select("expected_cash")
+      .eq("owner_id", ownerId)
       .eq("date", selectedDate);
 
     if (reconError) {
@@ -76,8 +95,8 @@ const Reconciliation = () => {
       return;
     }
 
-    const totalSales = salesData?.reduce((sum, sale) => sum + sale.total_price, 0) || 0;
-    const reconciledAmount = reconData?.reduce((sum, record) => sum + record.expected_cash, 0) || 0;
+    const totalSales = salesData?.reduce((sum, sale) => sum + Number(sale.total_price), 0) || 0;
+    const reconciledAmount = reconData?.reduce((sum, record) => sum + Number(record.expected_cash), 0) || 0;
 
     const remainingExpected = Math.max(0, totalSales - reconciledAmount);
     setExpectedCash(remainingExpected.toFixed(2));
@@ -92,21 +111,23 @@ const Reconciliation = () => {
     setIsLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user || !ownerId) throw new Error("Not authenticated");
 
-      const expectedAmount = parseFloat(expectedCash);
       const receivedAmount = parseFloat(cashReceived);
+      // If partial, the amount we're reconciling against is what we actually found.
+      // This leaves the remaining sales pool "unreconciled" for later.
+      const expectedAmount = isPartial ? receivedAmount : parseFloat(expectedCash);
+
       const discrepancy = Math.abs(expectedAmount - receivedAmount);
-      const status = discrepancy > 0.01 ? "disputed" : "approved";
+      const status = isPartial ? "approved" : (discrepancy > 0.01 ? "disputed" : "approved");
 
       const { error } = await supabase.from("reconciliation").insert({
-        owner_id: user.id,
+        owner_id: ownerId,
         date: selectedDate,
         expected_cash: expectedAmount,
         cash_received: receivedAmount,
         status,
-        notes,
+        notes: isPartial ? `[Partial Count] ${notes}`.trim() : notes,
       });
 
       if (error) throw error;
@@ -114,6 +135,7 @@ const Reconciliation = () => {
       toast.success("Reconciliation record saved!");
       setCashReceived("");
       setNotes("");
+      setIsPartial(false);
       fetchRecords();
       calculateExpectedCash();
     } catch (error: any) {
@@ -129,7 +151,7 @@ const Reconciliation = () => {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <div className="flex items-center gap-3">
         <div className="p-3 rounded-xl bg-primary/10">
           <ClipboardList className="h-8 w-8 text-primary" />
@@ -153,13 +175,21 @@ const Reconciliation = () => {
             />
           </div>
 
-          <div className="p-4 rounded-lg bg-accent">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="h-5 w-5 text-primary" />
-              <span className="font-semibold">{t("reconciliation.expected")}</span>
+          <div className="space-y-2">
+            <Label htmlFor="expectedCash">{t("reconciliation.expected")} ({currencySymbol})</Label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                id="expectedCash"
+                type="number"
+                step="0.01"
+                disabled={isPartial}
+                className="pl-10 h-12 text-xl font-bold bg-muted/50"
+                value={isPartial ? cashReceived : expectedCash}
+                onChange={(e) => setExpectedCash(e.target.value)}
+              />
             </div>
-            <p className="text-3xl font-bold text-foreground">{formatCurrency(parseFloat(expectedCash))}</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground">
               {t("reconciliation.expectedHint")} {selectedDate}
             </p>
           </div>
@@ -176,7 +206,20 @@ const Reconciliation = () => {
             />
           </div>
 
-          {cashReceived && (
+          <div className="flex items-center space-x-2 py-2">
+            <input
+              type="checkbox"
+              id="isPartial"
+              checked={isPartial}
+              onChange={(e) => setIsPartial(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary h-5 w-5"
+            />
+            <Label htmlFor="isPartial" className="cursor-pointer font-medium text-primary">
+              {t("reconciliation.isPartial") || "This is a partial count (keep remaining sales for later)"}
+            </Label>
+          </div>
+
+          {cashReceived && !isPartial && (
             <div
               className={`p-4 rounded-lg border-2 ${Math.abs(discrepancy) > 0.01
                 ? "bg-destructive/10 border-destructive"
@@ -229,6 +272,7 @@ const Reconciliation = () => {
           ) : (
             records.map((record) => {
               const diff = record.expected_cash - record.cash_received;
+              const isPartialRecord = record.notes?.includes("[Partial Count]");
               return (
                 <div key={record.id} className="p-4 rounded-lg border">
                   <div className="flex justify-between items-start">
@@ -238,19 +282,23 @@ const Reconciliation = () => {
                         {t("reconciliation.expectedLabel")}: {formatCurrency(record.expected_cash)} | {t("reconciliation.receivedLabel")}: {formatCurrency(record.cash_received)}
                       </p>
                       {record.notes && (
-                        <p className="text-sm text-muted-foreground mt-1">{record.notes}</p>
+                        <p className="text-sm text-muted-foreground mt-1 italic">{record.notes}</p>
                       )}
                     </div>
                     <div className="text-right">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${record.status === "approved"
-                          ? "bg-primary/10 text-primary"
-                          : "bg-destructive/10 text-destructive"
+                        className={`px-2 py-1 rounded text-xs font-semibold ${isPartialRecord
+                          ? "bg-amber-100 text-amber-700"
+                          : record.status === "approved"
+                            ? "bg-primary/10 text-primary"
+                            : "bg-destructive/10 text-destructive"
                           }`}
                       >
-                        {record.status === "approved" ? t("reconciliation.statusApproved") : t("reconciliation.statusDisputed")}
+                        {isPartialRecord
+                          ? "PARTIAL"
+                          : (record.status === "approved" ? t("reconciliation.statusApproved") : t("reconciliation.statusDisputed"))}
                       </span>
-                      {Math.abs(diff) > 0.01 && (
+                      {!isPartialRecord && Math.abs(diff) > 0.01 && (
                         <p className="text-sm font-semibold mt-1">
                           {formatCurrency(Math.abs(diff))} {diff > 0 ? t("reconciliation.short") : t("reconciliation.over")}
                         </p>

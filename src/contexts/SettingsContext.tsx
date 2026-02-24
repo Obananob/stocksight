@@ -252,6 +252,8 @@ const translations: Record<Language, Record<string, string>> = {
     "sales.insufficientStock": "Insufficient stock available",
     "sales.failed": "Failed to record sale",
     "sales.receiptDownloaded": "Receipt downloaded!",
+    "sales.allSynced": "All data synced",
+    "sales.pendingSyncs": "{count} sales pending sync",
     // Reports
     "reports.title": "Reports & Analytics",
     "reports.subtitle": "Track your sales performance",
@@ -296,6 +298,7 @@ const translations: Record<Language, Record<string, string>> = {
     "reconciliation.receivedLabel": "Received",
     "reconciliation.statusApproved": "Approved",
     "reconciliation.statusDisputed": "Disputed",
+    "reconciliation.isPartial": "This is a partial count (keep remaining sales for later)",
     // Audit Log
     "audit.title": "Audit Log",
     "audit.subtitle": "Track all inventory changes",
@@ -537,6 +540,8 @@ const translations: Record<Language, Record<string, string>> = {
     "sales.insufficientStock": "Kayan da ke akwai ba su isa ba",
     "sales.failed": "An kasa rubuta sayarwa",
     "sales.receiptDownloaded": "An sauke takardar sayarwa!",
+    "sales.allSynced": "An daidaita komai",
+    "sales.pendingSyncs": "Siyarwa {count} na jiran daidaitawa",
     // Reports
     "reports.title": "Rahotanni & Nazari",
     "reports.subtitle": "Bi diddigin aikin sayarwarka",
@@ -580,6 +585,7 @@ const translations: Record<Language, Record<string, string>> = {
     "reconciliation.receivedLabel": "Abin da aka Karɓa",
     "reconciliation.statusApproved": "An amince",
     "reconciliation.statusDisputed": "An ƙi",
+    "reconciliation.isPartial": "Wannan lissafin sashe ne (ajiye sauran tallace-tallace na gaba)",
     // Audit Log
     "audit.title": "Tarihin Aiki",
     "audit.subtitle": "Bi diddigin duk canje-canjen kaya",
@@ -821,6 +827,8 @@ const translations: Record<Language, Record<string, string>> = {
     "sales.insufficientStock": "Ngwa dị ebe a ezughị",
     "sales.failed": "A kụghị idekọ ahịa",
     "sales.receiptDownloaded": "E budatara akwụkwọ ahịa!",
+    "sales.allSynced": "Emekọrịta ihe niile",
+    "sales.pendingSyncs": "Ahịa {count} na-eche nmekọrịta",
     // Reports
     "reports.title": "Akụkọ na Nyocha",
     "reports.subtitle": "Soro ọrụ ahịa gị",
@@ -864,6 +872,7 @@ const translations: Record<Language, Record<string, string>> = {
     "reconciliation.receivedLabel": "A Natara",
     "reconciliation.statusApproved": "Ekwenyere",
     "reconciliation.statusDisputed": "A rụrụ ụka",
+    "reconciliation.isPartial": "Nke a bụ nzukọ n'akụkụ (dowe ahịa fọdụrụ maka emesịa)",
     // Audit Log
     "audit.title": "Akwụkwọ Ọrụ",
     "audit.subtitle": "Soro mgbanwe ngwa niile",
@@ -1097,6 +1106,8 @@ const translations: Record<Language, Record<string, string>> = {
     "sales.insufficientStock": "Ọjà tó wà lọ́wọ́ kò tó",
     "sales.failed": "Títà kò kọ",
     "sales.receiptDownloaded": "A ti gba takàdá títà!",
+    "sales.allSynced": "Gbogbo rẹ̀ ti dọ́gba",
+    "sales.pendingSyncs": "Títà {count} ń dúró láti mú dọ́gba",
     // Reports
     "reports.title": "Ìròyìn àti Ìtúpalẹ̀",
     "reports.subtitle": "Tọpinpin àmúṣe títà rẹ",
@@ -1140,6 +1151,7 @@ const translations: Record<Language, Record<string, string>> = {
     "reconciliation.receivedLabel": "Ti A Gba",
     "reconciliation.statusApproved": "A fọwọ́sí",
     "reconciliation.statusDisputed": "A tako",
+    "reconciliation.isPartial": "Èyí jẹ́ ìṣírò ọ̀kan lára apá kan (pa ìyókù títà mọ́ fún ìgbà mìíràn)",
     // Audit Log
     "audit.title": "Àkọsílẹ̀ Iṣẹ́",
     "audit.subtitle": "Tọpinpin gbogbo àyípadà àkópọ̀",
