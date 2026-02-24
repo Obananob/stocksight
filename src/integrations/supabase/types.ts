@@ -231,7 +231,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      convert_to_sales_rep: { Args: { _user_id: string }; Returns: undefined }
       get_user_owner_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
